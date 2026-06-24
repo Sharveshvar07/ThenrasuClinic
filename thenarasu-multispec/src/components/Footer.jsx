@@ -21,8 +21,10 @@ export default function Footer() {
         <div>
           <h4>Contact Us</h4>
           <address>
-            <p>123 Health Avenue, Medical District</p>
-            <p>Phone: (555) 123-4567</p>
+            <p><a href="https://maps.app.goo.gl/eWcxcj7ASZQJ5ALq5" target="_blank" rel="noopener noreferrer"
+             style={{color: "#fff", textDecoration: "underline"}}>7G7M+R4M Uthangarai, Krishnagiri, TamilNadu</a></p>
+          
+            <p>Phone: 73730 12109</p>
             <p>Email: care@drthennarasu.com</p>
           </address>
         </div>

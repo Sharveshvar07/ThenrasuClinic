@@ -11,7 +11,6 @@ router.get("/", async (req, res) => {
         name,
         description,
         icon,
-        doctor_name  AS "doctorName",
         available
       FROM specialities
       ORDER BY id
