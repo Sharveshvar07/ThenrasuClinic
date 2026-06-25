@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getSpecialities, createAppointment } from "../api";
+import SpecialtyIcon from "../components/SpecialtyIcon"; // ← add this import
 
 const TIME_SLOTS = [
   "09:00 AM","09:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM",
@@ -37,17 +38,44 @@ export default function Book() {
   }, []);
 
   const validate = () => {
-    const e = {};
-    if (!form.specialtyId)    e.specialtyId    = "Please select a specialty";
-    if (!form.patientName || form.patientName.length < 2) e.patientName = "Name must be at least 2 characters";
-    if (!form.patientAge || form.patientAge < 1 || form.patientAge > 120) e.patientAge = "Enter a valid age";
-    if (!form.patientGender)  e.patientGender  = "Please select a gender";
-    if (!form.patientPhone || form.patientPhone.length < 10) e.patientPhone = "Enter a valid phone number";
-    if (!form.appointmentDate) e.appointmentDate = "Please select a date";
-    if (!form.appointmentTime) e.appointmentTime = "Please select a time slot";
-    return e;
-  };
+  const e = {};
 
+  if (!form.specialtyId)
+    e.specialtyId = "Please select a specialty";
+
+  if (!form.patientName || form.patientName.length < 2)
+    e.patientName = "Name must be at least 2 characters";
+
+  if (!form.patientAge || form.patientAge < 1 || form.patientAge > 120)
+    e.patientAge = "Enter a valid age";
+
+  if (!form.patientGender)
+    e.patientGender = "Please select a gender";
+
+  // Phone — required, exactly 10 digits
+  if (!form.patientPhone) {
+    e.patientPhone = "Phone number is required";
+  } else if (!/^\d{10}$/.test(form.patientPhone)) {
+    e.patientPhone = "Phone number must be exactly 10 digits";
+  }
+
+  // Email — now mandatory + format check
+  if (!form.patientEmail) {
+    e.patientEmail = "Email address is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.patientEmail)) {
+    e.patientEmail = "Enter a valid email address";
+  }
+
+  if (!form.appointmentDate)
+    e.appointmentDate = "Please select a date";
+
+  if (!form.appointmentTime)
+    e.appointmentTime = "Please select a time slot";
+
+  return e;
+};
+
+  
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
@@ -101,30 +129,79 @@ export default function Book() {
 
       <form onSubmit={handleSubmit} className="book-form">
 
-        {/* Step 1 - Specialty */}
-        <fieldset>
-          <legend>1. Select Specialty</legend>
-          {loading ? (
-            <div className="skeleton-grid small">
-              {[1,2,3,4].map(i => <div key={i} className="skeleton-card small"></div>)}
+       <fieldset>
+  <legend>1. Select Specialty</legend>
+  {loading ? (
+    <p style={{ color: "#64748b", fontSize: "14px" }}>Loading...</p>
+  ) : (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+        gap: "12px",
+        marginTop: "10px",
+      }}
+    >
+      {specialities.filter(s => s.available).map(s => {
+        const isSelected = Number(form.specialtyId) === s.id;
+        return (
+          <div
+            key={s.id}
+            onClick={() => { setForm({ ...form, specialtyId: s.id }); setErrors({ ...errors, specialtyId: "" }); }}
+            style={{
+              background: isSelected ? "#eff6ff" : "#fff",
+              border: isSelected ? "2px solid #2563eb" : "2px solid #e5e7eb",
+              borderRadius: "12px",
+              padding: "16px 12px",
+              cursor: "pointer",
+              textAlign: "center",
+              transition: "all 0.2s",
+            }}
+          >
+            {/* Icon */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "10px",
+                color: isSelected ? "#2563eb" : "#e8a020",
+              }}
+            >
+              <SpecialtyIcon name={s.name} />
             </div>
-          ) : (
-            <div className="specialty-select-grid">
-              {specialities.filter(s => s.available).map(s => (
-                <div
-                  key={s.id}
-                  className={`specialty-option ${Number(form.specialtyId) === s.id ? "selected" : ""}`}
-                  onClick={() => { setForm({ ...form, specialtyId: s.id }); setErrors({ ...errors, specialtyId: "" }); }}
-                >
-                  <div className="option-icon">{s.icon[0]}</div>
-                  <span>{s.name}</span>
-                  <small>{s.doctorName}</small>
-                </div>
-              ))}
-            </div>
-          )}
-          {errors.specialtyId && <p className="error">{errors.specialtyId}</p>}
-        </fieldset>
+            {/* Name */}
+            <span
+              style={{
+                display: "block",
+                fontWeight: "600",
+                fontSize: "13px",
+                color: isSelected ? "#2563eb" : "#1a3c5e",
+                marginBottom: "4px",
+              }}
+            >
+              {s.name}
+            </span>
+            {/* Doctor */}
+            <small
+              style={{
+                fontSize: "11px",
+                color: "#9ca3af",
+              }}
+            >
+              {s.doctorName}
+            </small>
+          </div>
+        );
+      })}
+    </div>
+  )}
+  {errors.specialtyId && (
+    <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "6px" }}>
+      {errors.specialtyId}
+    </p>
+  )}
+</fieldset>
 
         {/* Step 2 - Date & Time */}
         <fieldset>
@@ -165,7 +242,7 @@ export default function Book() {
           <div className="form-row">
             <div className="form-group">
               <label>Age *</label>
-              <input type="number" name="patientAge" placeholder="30" value={form.patientAge} onChange={handleChange} />
+              <input type="number" name="patientAge" placeholder="00" value={form.patientAge} onChange={handleChange} />
               {errors.patientAge && <p className="error">{errors.patientAge}</p>}
             </div>
             <div className="form-group">
@@ -181,16 +258,59 @@ export default function Book() {
           </div>
 
           <div className="form-row">
-            <div className="form-group">
-              <label>Phone Number *</label>
-              <input type="tel" name="patientPhone" placeholder="(555) 123-4567" value={form.patientPhone} onChange={handleChange} />
-              {errors.patientPhone && <p className="error">{errors.patientPhone}</p>}
-            </div>
-            <div className="form-group">
-              <label>Email Address (Optional)</label>
-              <input type="email" name="patientEmail" placeholder="john@example.com" value={form.patientEmail} onChange={handleChange} />
-            </div>
-          </div>
+  <div className="form-group">
+    <label>Phone Number *</label>
+    <input
+      type="tel"
+      name="patientPhone"
+      placeholder="Enter 10-digit number"
+      value={form.patientPhone}
+      maxLength={10}
+      onChange={(e) => {
+        // Allow only digits, max 10
+        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+        setForm({ ...form, patientPhone: val });
+        if (val.length === 0) {
+          setErrors({ ...errors, patientPhone: "Phone number is required." });
+        } else if (val.length < 10) {
+          setErrors({ ...errors, patientPhone: "Phone number must be exactly 10 digits." });
+        } else {
+          setErrors({ ...errors, patientPhone: "" });
+        }
+      }}
+      style={{
+        border: errors.patientPhone ? "1.5px solid #ef4444" : "1.5px solid #d1d5db",
+      }}
+    />
+    {errors.patientPhone && <p className="error">{errors.patientPhone}</p>}
+  </div>
+
+  <div className="form-group">
+    <label>Email Address *</label>
+    <input
+      type="email"
+      name="patientEmail"
+      placeholder="john@example.com"
+      value={form.patientEmail}
+      onChange={(e) => {
+        const val = e.target.value;
+        setForm({ ...form, patientEmail: val });
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!val) {
+          setErrors({ ...errors, patientEmail: "Email address is required." });
+        } else if (!emailRegex.test(val)) {
+          setErrors({ ...errors, patientEmail: "Enter a valid email address." });
+        } else {
+          setErrors({ ...errors, patientEmail: "" });
+        }
+      }}
+      style={{
+        border: errors.patientEmail ? "1.5px solid #ef4444" : "1.5px solid #d1d5db",
+      }}
+    />
+    {errors.patientEmail && <p className="error">{errors.patientEmail}</p>}
+  </div>
+</div>
 
           <div className="form-group">
             <label>Reason for Visit (Optional)</label>

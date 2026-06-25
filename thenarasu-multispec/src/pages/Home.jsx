@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSpecialities } from "../api";
 import HeroBg from "../Images/homebg.jpg";
+import SpecialtyIcon from "../components/SpecialtyIcon";
 
 export default function Home() {
   const [specialities, setSpecialities] = useState([]);
@@ -169,51 +170,34 @@ export default function Home() {
               gap: "25px",
             }}
           >
-            {specialities.map((s) => (
-              <div
-                key={s.id}
-                style={{
-                  background: "#fff",
-                  padding: "25px",
-                  borderRadius: "15px",
-                  boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "40px",
-                    marginBottom: "15px",
-                  }}
-                >
-                  {s.icon?.[0]}
-                </div>
+           {specialities.map((s) => (
+  <div
+    key={s.id}
+    style={{
+      background: "#fff",
+      padding: "25px",
+      borderRadius: "15px",
+      boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+    }}
+  >
+    {/* ✅ CHANGED: was {s.icon?.[0]}, now shows proper SVG icon */}
+    <SpecialtyIcon name={s.name} />
 
-                <h3>{s.name}</h3>
+    <h3>{s.name}</h3>
+    <p>{s.description}</p>
 
-                <p>{s.description}</p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "20px",
-                  }}
-                >
-                  <span>{s.doctorName}</span>
-
-                  <Link
-                    to={`/book?specialty=${s.id}`}
-                    style={{
-                      textDecoration: "none",
-                      color: "#2563eb",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Book →
-                  </Link>
-                </div>
-              </div>
-            ))}
+    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
+      <span>{s.doctorName}</span>
+      <Link
+        to={`/book?specialty=${s.id}`}
+        style={{ textDecoration: "none", color: "#2563eb", fontWeight: "600" }}
+      >
+        Book →
+      </Link>
+    </div>
+  </div>
+))}
+            
           </div>
         )}
       </section>

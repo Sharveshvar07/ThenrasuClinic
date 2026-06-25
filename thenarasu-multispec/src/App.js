@@ -6,6 +6,7 @@ import Book from "./pages/Book";
 import Appointments from "./pages/Appointments";
 import "./index.css";
 import "./clinic.css";
+import Pricing from "./pages/Pricing";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/"            element={<Home />} />
             <Route path="/book"        element={<Book />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/pricing" element={<Pricing />} />
           </Routes>
         </main>
         <Footer />

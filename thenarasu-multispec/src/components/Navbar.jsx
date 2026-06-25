@@ -32,7 +32,7 @@ export default function Navbar() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
+            gap: "70px",
             textDecoration: "none",
             color: "#000",
           }}
@@ -105,6 +105,21 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             Appointments
+          </Link>
+
+          <Link
+            to="/pricing"
+            style={{
+              textDecoration: "none",
+              color:
+                location.pathname === "/pricing"
+                  ? "#0d6efd"
+                  : "#333",
+              fontWeight: "600",
+            }}
+            onClick={() => setOpen(false)}
+          >
+            Pricing
           </Link>
 
           <Link
