@@ -54,6 +54,10 @@
   padding: 32px 24px; transition: transform .3s, box-shadow .3s;
 }
 .specialty-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(26,39,68,.1); }
+.profile-card { transition: transform .3s ease, box-shadow .3s ease; }
+.profile-card:hover { transform: translateY(-6px); box-shadow: 0 24px 40px rgba(15,23,42,.18); }
+.profile-hover { opacity: 0; }
+.profile-card:hover .profile-hover { opacity: 1; }
 .specialty-icon { font-size: 28px; color: var(--gold); margin-bottom: 16px; font-weight: 700; }
 .specialty-card h3 { font-size: 20px; margin-bottom: 10px; }
 .specialty-card p  { color: var(--gray); font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
@@ -169,9 +173,30 @@
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr auto;
   gap: 50px;
   margin-bottom: 40px;
+  align-items: flex-start;
+}
+
+.footer-contact {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 48px;
+  min-width: 320px;
+}
+
+.footer-contact-details {
+  max-width: 360px;
+}
+
+.footer-qr-image {
+  width: 140px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.16);
+  background: #fff;
+  display: block;
 }
 
 .footer h3 {

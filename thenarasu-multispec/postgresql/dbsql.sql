@@ -37,9 +37,10 @@ INSERT INTO specialities (name, description, icon, doctor_name, available) VALUE
   ('Women''s Health',  'Gynaecology, reproductive health, and wellness check-ups for women.',       'Users',       'Dr. Thennarasu', true),
   ('General Surgery',  'Minor surgical procedures and wound care in a safe clinical environment.',  'Stethoscope', 'Dr. Thennarasu', true);
 
-SELECT * FROM specialities;
+SELECT * FROM appointments;
 
-drop table specialities;
+SELECT current_database(), COUNT(*) AS specialities_count
+FROM specialities;
 
 SELECT COUNT(*) FROM specialties;
 

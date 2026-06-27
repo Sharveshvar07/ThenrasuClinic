@@ -3,6 +3,13 @@ import pool from "../db.js";
 
 const router = Router();
 
+const SLOT_CAPACITIES = {
+  "09:00 AM - 10:30 AM": 6,
+  "10:30 AM - 12:30 PM": 8,
+  "02:00 PM - 03:30 PM": 6,
+  "03:30 PM - 05:00 PM": 6,
+};
+
 // ─── HELPER: format a DB row to camelCase ───────────────────────────────────
 function fmt(row) {
   return {
@@ -77,6 +84,21 @@ router.post("/", async (req, res) => {
     const spec = await pool.query("SELECT id FROM specialties WHERE id=$1", [specialtyId]);
     if (spec.rows.length === 0) {
       return res.status(400).json({ error: "Specialty not found" });
+    }
+
+    const slotCapacity = SLOT_CAPACITIES[appointmentTime];
+    if (!slotCapacity) {
+      return res.status(400).json({ error: "Invalid appointment time slot" });
+    }
+
+    const { rows: [countRow] } = await pool.query(`
+      SELECT COUNT(*)::int AS count
+      FROM appointments
+      WHERE appointment_date=$1 AND appointment_time=$2 AND status != 'cancelled'
+    `, [appointmentDate, appointmentTime]);
+
+    if (countRow.count >= slotCapacity) {
+      return res.status(400).json({ error: "This time slot is already full for the selected date." });
     }
 
     const { rows: [row] } = await pool.query(`

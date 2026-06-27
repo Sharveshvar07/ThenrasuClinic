@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getSpecialities, createAppointment } from "../api";
-import SpecialtyIcon from "../components/SpecialtyIcon"; // ← add this import
+import { getSpecialities, getAppointments, createAppointment } from "../api";
+import SpecialtyIcon from "../components/SpecialtyIcon";
 
 const TIME_SLOTS = [
-  "09:00 AM","09:30 AM","10:00 AM","10:30 AM","11:00 AM","11:30 AM",
-  "02:00 PM","02:30 PM","03:00 PM","03:30 PM","04:00 PM","04:30 PM","05:00 PM",
+  { value: "09:00 AM - 10:30 AM", label: "09:00 AM - 10:30 AM", capacity: 6 },
+  { value: "10:30 AM - 12:30 PM", label: "10:30 AM - 12:30 PM", capacity: 8 },
+  { value: "02:00 PM - 03:30 PM", label: "02:00 PM - 03:30 PM", capacity: 6 },
+  { value: "03:30 PM - 05:00 PM", label: "03:30 PM - 05:00 PM", capacity: 6 },
 ];
 
 export default function Book() {
@@ -13,10 +15,11 @@ export default function Book() {
   const [searchParams] = useSearchParams();
 
   const [specialities, setspecialities] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [submitting, setSubmitting]   = useState(false);
-  const [success, setSuccess]         = useState(false);
-  const [errors, setErrors]           = useState({});
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [submitting, setSubmitting]     = useState(false);
+  const [success, setSuccess]           = useState(false);
+  const [errors, setErrors]             = useState({});
 
   const [form, setForm] = useState({
     specialtyId:     searchParams.get("specialty") || "",
@@ -30,12 +33,36 @@ export default function Book() {
     reason:          "",
   });
 
+  const isWomensHealthSelected = useMemo(() => {
+    const selected = specialities.find((s) => Number(form.specialtyId) === s.id);
+    return selected?.name?.toLowerCase().replace(/['’]/g, "") === "womens health";
+  }, [specialities, form.specialtyId]);
+
+  useEffect(() => {
+    if (isWomensHealthSelected) {
+      setForm((prev) => ({ ...prev, patientGender: "Female" }));
+    }
+  }, [isWomensHealthSelected]);
+
   useEffect(() => {
     document.title = "Book Appointment";
-    getSpecialities()
-      .then((r) => setspecialities(r.data))
+    Promise.all([getSpecialities(), getAppointments()])
+      .then(([specRes, apptRes]) => {
+        setspecialities(specRes.data);
+        setAppointments(apptRes.data);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const bookedCounts = useMemo(() => {
+    if (!form.appointmentDate) return {};
+    return appointments
+      .filter((a) => a.appointmentDate === form.appointmentDate && a.status !== "cancelled")
+      .reduce((acc, appointment) => {
+        acc[appointment.appointmentTime] = (acc[appointment.appointmentTime] || 0) + 1;
+        return acc;
+      }, {});
+  }, [appointments, form.appointmentDate]);
 
   const validate = () => {
   const e = {};
@@ -77,9 +104,15 @@ export default function Book() {
 
   
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === "appointmentDate") {
+      setForm({ ...form, appointmentDate: e.target.value, appointmentTime: "" });
+    } else {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
     setErrors({ ...errors, [e.target.name]: "" });
   };
+
+  const isSlotFull = (slot) => bookedCounts[slot.value] >= slot.capacity;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,17 +121,19 @@ export default function Book() {
 
     setSubmitting(true);
     try {
-      await createAppointment({
+      const { data } = await createAppointment({
         ...form,
         specialtyId: Number(form.specialtyId),
         patientAge:  Number(form.patientAge),
         patientEmail: form.patientEmail || undefined,
         reason:       form.reason || undefined,
       });
+      setAppointments((prev) => [...prev, data]);
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      alert("Booking failed. Please try again.");
+      const message = err?.response?.data?.error || "Booking failed. Please try again.";
+      alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -222,7 +257,11 @@ export default function Book() {
               <label>Preferred Time *</label>
               <select name="appointmentTime" value={form.appointmentTime} onChange={handleChange}>
                 <option value="">Select a time slot</option>
-                {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                {TIME_SLOTS.map((slot) => (
+                  <option key={slot.value} value={slot.value} disabled={isSlotFull(slot)}>
+                    {slot.label} {isSlotFull(slot) ? "(Full)" : `(${bookedCounts[slot.value] || 0}/${slot.capacity})`}
+                  </option>
+                ))}
               </select>
               {errors.appointmentTime && <p className="error">{errors.appointmentTime}</p>}
             </div>
@@ -247,12 +286,16 @@ export default function Book() {
             </div>
             <div className="form-group">
               <label>Gender *</label>
-              <select name="patientGender" value={form.patientGender} onChange={handleChange}>
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+              {isWomensHealthSelected ? (
+                <input type="text" value="Female" disabled style={{ backgroundColor: "#f8fafc", color: "#111827" }} />
+              ) : (
+                <select name="patientGender" value={form.patientGender} onChange={handleChange}>
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              )}
               {errors.patientGender && <p className="error">{errors.patientGender}</p>}
             </div>
           </div>

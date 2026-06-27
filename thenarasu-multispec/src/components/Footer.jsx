@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "../clinic.css"; 
+import LocationQr from "../Images/locationqr.png";
 
 export default function Footer() {
   return (
@@ -10,23 +11,31 @@ export default function Footer() {
           <p>A warm, trustworthy multispeciality clinic providing comprehensive healthcare for families.</p>
           <em>"Caring across Generations."</em>
         </div>
-        <div>
-          <h4>Quick Links</h4>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/book">Book Appointment</Link></li>
-            <li><Link to="/appointments">My Appointments</Link></li>
-          </ul>
-        </div>
-        <div>
-          <h4>Contact Us</h4>
-          <address>
-            <p><a href="https://maps.app.goo.gl/eWcxcj7ASZQJ5ALq5" target="_blank" rel="noopener noreferrer"
-             style={{color: "#fff", textDecoration: "underline"}}>7G7M+R4M Uthangarai, Krishnagiri, TamilNadu</a></p>
-          
-            <p>Phone: 73730 12109</p>
-            <p>Email: care@drthennarasu.com</p>
-          </address>
+        <div className="footer-contact">
+          <div className="footer-contact-details">
+            <h4>Contact Us</h4>
+            <address>
+              <p>
+                <a
+                  href="https://maps.app.goo.gl/eWcxcj7ASZQJ5ALq5"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#fff", textDecoration: "underline" }}
+                >
+                  7G7M+R4M Uthangarai, Krishnagiri, TamilNadu
+                </a>
+              </p>
+              <p>Phone: +91 9092663216</p>
+              <p>Email: a.rthennarasu05@gmail.com</p>
+            </address>
+          </div>
+          <div className="footer-qr">
+            <img
+              src={LocationQr}
+              alt="Location QR Code"
+              className="footer-qr-image"
+            />
+          </div>
         </div>
       </div>
       <div className="footer-bottom">
