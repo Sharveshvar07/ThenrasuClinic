@@ -1,69 +1,72 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
 import Logo from "../Images/Logo.jpeg";
 
 export default function Navbar() {
   const location = useLocation();
-  const [open, setOpen] = useState(false);
+
+  const linkStyle = (path) => ({
+    textDecoration: "none",
+    color: location.pathname === path ? "#0d6efd" : "#333",
+    fontWeight: "600",
+    fontSize: "16px",
+  });
 
   return (
     <header
       style={{
-        backgroundColor: "#ffffff",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        background: "#fff",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
         position: "sticky",
-        top: "0",
-        zIndex: "1000",
+        top: 0,
+        zIndex: 1000,
       }}
     >
-    <div
-      style={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "5px 25px",
-        boxSizing: "border-box",
-      }}
-    >
-        {/* Logo + Clinic Name */}
+      <div
+        style={{
+          maxWidth: "1400px",
+          margin: "auto",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "10px 30px",
+        }}
+      >
+        {/* Logo */}
         <Link
           to="/"
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "70px",
             textDecoration: "none",
             color: "#000",
+            gap: "20px",
           }}
         >
           <img
             src={Logo}
             alt="Clinic Logo"
             style={{
-              width: "150px",
-              height: "80px",
-              borderRadius: "0%",
-              paddingLeft: "10px",
+              width: "140px",
+              height: "75px",
+              objectFit: "contain",
             }}
           />
 
           <div>
-            <h1
+            <h2
               style={{
-                margin: "0",
-                fontSize: "24px",
+                margin: 0,
                 color: "#0d6efd",
               }}
             >
               Dr. Thennarasu
-            </h1>
+            </h2>
 
             <p
               style={{
-                margin: "0",
+                margin: 0,
+                color: "#666",
                 fontSize: "14px",
-                color: "#555",
               }}
             >
               Multispeciality Clinic
@@ -74,61 +77,45 @@ export default function Navbar() {
         {/* Navigation */}
         <nav
           style={{
-            display: open ? "flex" : "flex",
+            display: "flex",
             alignItems: "center",
-            gap: "20px",
+            gap: "25px",
           }}
         >
-          <Link
-            to="/"
-            style={{
-              textDecoration: "none",
-              color:
-                location.pathname === "/" ? "#0d6efd" : "#333",
-              fontWeight: "600",
-            }}
-            onClick={() => setOpen(false)}
-          >
+          <Link to="/" style={linkStyle("/")}>
             Home
           </Link>
 
-          <Link
-            to="/appointments"
-            style={{
-              textDecoration: "none",
-              color:
-                location.pathname === "/appointments"
-                  ? "#0d6efd"
-                  : "#333",
-              fontWeight: "600",
-            }}
-            onClick={() => setOpen(false)}
-          >
+          <Link to="/appointments" style={linkStyle("/appointments")}>
             Appointments
           </Link>
 
-          <Link
-            to="/pricing"
-            style={{
-              textDecoration: "none",
-              color:
-                location.pathname === "/pricing"
-                  ? "#0d6efd"
-                  : "#333",
-              fontWeight: "600",
-            }}
-            onClick={() => setOpen(false)}
-          >
+          <Link to="/pricing" style={linkStyle("/pricing")}>
             Pricing
           </Link>
 
           <Link
-            to="/book"
-            onClick={() => setOpen(false)}
+            to="/login"
             style={{
               textDecoration: "none",
-              backgroundColor: "#0d6efd",
+              color:
+                location.pathname === "/login" ||
+                location.pathname === "/patient-login" ||
+                location.pathname === "/hospital-login"
+                  ? "#0d6efd"
+                  : "#333",
+              fontWeight: "600",
+            }}
+          >
+            Login
+          </Link>
+
+          <Link
+            to="/book"
+            style={{
+              background: "#0d6efd",
               color: "#fff",
+              textDecoration: "none",
               padding: "10px 20px",
               borderRadius: "25px",
               fontWeight: "600",
@@ -137,20 +124,6 @@ export default function Navbar() {
             Book Appointment
           </Link>
         </nav>
-
-        {/* Hamburger Button */}
-        <button
-          onClick={() => setOpen(!open)}
-          style={{
-            display: "none",
-            fontSize: "24px",
-            border: "none",
-            background: "none",
-            cursor: "pointer",
-          }}
-        >
-          ☰
-        </button>
       </div>
     </header>
   );
