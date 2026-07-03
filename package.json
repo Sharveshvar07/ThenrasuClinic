@@ -7,13 +7,11 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
+    "dotenv": "^17.4.2",
+    "mongodb": "^7.4.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-<<<<<<< HEAD
-    "react-scripts": "^0.0.0",
-=======
     "react-scripts": "5.0.1",
->>>>>>> 1222c05408bf0fb9e3a2d994f096d29fde3f83f1
     "web-vitals": "^2.1.4"
   },
   "scripts": {

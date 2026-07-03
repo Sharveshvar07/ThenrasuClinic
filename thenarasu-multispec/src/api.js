@@ -4,6 +4,11 @@ const API = axios.create({
   baseURL: "http://localhost:3001/api",
 });
 
+export const loginUser = (credentials) => API.post("/auth/login", credentials);
+export const getCurrentUser = (token) => API.get("/auth/me", {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
 // Specialties
 export const getSpecialities = () => API.get("/specialities");
 

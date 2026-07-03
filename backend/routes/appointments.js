@@ -1,55 +1,70 @@
 import { Router } from "express";
-import pool from "../db.js";
+import { ObjectId } from "mongodb";
+import { getCollection } from "../mongodb.js";
 
 const router = Router();
 
 const SLOT_CAPACITIES = {
-  "09:00 AM - 10:30 AM": 6,
-  "10:30 AM - 12:30 PM": 8,
-  "02:00 PM - 03:30 PM": 6,
-  "03:30 PM - 05:00 PM": 6,
+  // General Medicine
+  "09:00 AM - 10:30 AM": 10,
+  "10:30 AM - 12:30 PM": 10,
+  "02:00 PM - 03:30 PM": 10,
+  "03:30 PM - 05:00 PM": 10,
+  // Dental Care
+  "08:00 AM - 10:00 AM": 6,
+  "02:00 PM - 04:00 PM": 6,
+  "05:00 PM - 09:00 PM": 8,
 };
 
 // ─── HELPER: format a DB row to camelCase ───────────────────────────────────
 function fmt(row) {
   return {
-    id:              row.id,
-    patientName:     row.patient_name,
-    patientAge:      row.patient_age,
-    patientGender:   row.patient_gender,
-    patientPhone:    row.patient_phone,
-    patientEmail:    row.patient_email ?? null,
-    specialtyId:     row.specialty_id,
-    specialtyName:   row.specialty_name ?? row.specialtyName,
-    appointmentDate: row.appointment_date,
-    appointmentTime: row.appointment_time,
+    id:              row._id.toString(),
+    patientName:     row.patientName,
+    patientAge:      row.patientAge,
+    patientGender:   row.patientGender,
+    patientPhone:    row.patientPhone,
+    patientEmail:    row.patientEmail ?? null,
+    specialtyId:     row.specialtyId,
+    specialtyName:   row.specialtyName ?? null,
+    appointmentDate: row.appointmentDate,
+    appointmentTime: row.appointmentTime,
     reason:          row.reason ?? null,
-    status:          row.status,
-    createdAt:       row.created_at,
+    status:          row.status || "pending",
+    createdAt:       row.createdAt,
   };
 }
+
+const isValidAppointmentId = (id) => ObjectId.isValid(id);
 
 // ─── GET /api/appointments/stats  (MUST come before /:id) ───────────────────
 router.get("/stats", async (req, res) => {
   try {
-    const { rows: [stats] } = await pool.query(`
-      SELECT
-        COUNT(*)::int                                       AS total,
-        COUNT(*) FILTER (WHERE status = 'pending')::int    AS pending,
-        COUNT(*) FILTER (WHERE status = 'confirmed')::int  AS confirmed,
-        COUNT(*) FILTER (WHERE status = 'cancelled')::int  AS cancelled
-      FROM appointments
-    `);
+    const appointments = getCollection("appointments");
+    const specialities = getCollection("specialities");
 
-    const { rows: bySpecialty } = await pool.query(`
-      SELECT s.name AS "specialtyName", COUNT(a.id)::int AS count
-      FROM appointments a
-      JOIN specialties s ON s.id = a.specialty_id
-      GROUP BY s.name
-      ORDER BY count DESC
-    `);
+    const total = await appointments.countDocuments();
+    const pending = await appointments.countDocuments({ status: "pending" });
+    const confirmed = await appointments.countDocuments({ status: "confirmed" });
+    const cancelled = await appointments.countDocuments({ status: "cancelled" });
 
-    res.json({ ...stats, bySpecialty });
+    const bySpecialty = await appointments.aggregate([
+      { $match: {} },
+      { $group: { _id: "$specialtyId", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      {
+        $lookup: {
+          from: "specialities",
+          localField: "_id",
+          foreignField: "_id",
+          as: "speciality",
+        },
+      },
+      { $unwind: "$speciality" },
+      { $project: { _id: 0, specialtyName: "$speciality.name", count: 1 } },
+    ]).toArray();
+
+    res.json({ total, pending, confirmed, cancelled, bySpecialty });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -59,13 +74,27 @@ router.get("/stats", async (req, res) => {
 // ─── GET /api/appointments ───────────────────────────────────────────────────
 router.get("/", async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT a.*, s.name AS specialty_name
-      FROM appointments a
-      JOIN specialties s ON s.id = a.specialty_id
-      ORDER BY a.created_at DESC
-    `);
-    res.json(rows.map(fmt));
+    const appointments = await getCollection("appointments")
+      .find()
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const specialityIds = [...new Set(appointments.map((a) => a.specialtyId))].filter(Boolean);
+    const specialityDocs = await getCollection("specialities")
+      .find({ _id: { $in: specialityIds.map((id) => new ObjectId(id)) } })
+      .toArray();
+
+    const specialityMap = specialityDocs.reduce((acc, doc) => {
+      acc[doc._id.toString()] = doc.name;
+      return acc;
+    }, {});
+
+    res.json(
+      appointments.map((row) => fmt({
+        ...row,
+        specialtyName: specialityMap[row.specialtyId] || null,
+      }))
+    );
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -81,8 +110,8 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     // Check specialty exists
-    const spec = await pool.query("SELECT id FROM specialties WHERE id=$1", [specialtyId]);
-    if (spec.rows.length === 0) {
+    const speciality = await getCollection("specialities").findOne({ _id: new ObjectId(specialtyId) });
+    if (!speciality) {
       return res.status(400).json({ error: "Specialty not found" });
     }
 
@@ -91,33 +120,32 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Invalid appointment time slot" });
     }
 
-    const { rows: [countRow] } = await pool.query(`
-      SELECT COUNT(*)::int AS count
-      FROM appointments
-      WHERE appointment_date=$1 AND appointment_time=$2 AND status != 'cancelled'
-    `, [appointmentDate, appointmentTime]);
+    const count = await getCollection("appointments").countDocuments({
+      appointmentDate,
+      appointmentTime,
+      status: { $ne: "cancelled" },
+    });
 
-    if (countRow.count >= slotCapacity) {
+    if (count >= slotCapacity) {
       return res.status(400).json({ error: "This time slot is already full for the selected date." });
     }
 
-    const { rows: [row] } = await pool.query(`
-      INSERT INTO appointments
-        (patient_name, patient_age, patient_gender, patient_phone, patient_email,
-         specialty_id, appointment_date, appointment_time, reason, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending')
-      RETURNING *
-    `, [patientName, patientAge, patientGender, patientPhone,
-        patientEmail || null, specialtyId, appointmentDate, appointmentTime, reason || null]);
+    const row = await getCollection("appointments").insertOne({
+      patientName,
+      patientAge,
+      patientGender,
+      patientPhone,
+      patientEmail: patientEmail || null,
+      specialtyId,
+      appointmentDate,
+      appointmentTime,
+      reason: reason || null,
+      status: "pending",
+      createdAt: new Date(),
+    });
 
-    // Attach specialty name
-    const { rows: [full] } = await pool.query(`
-      SELECT a.*, s.name AS specialty_name
-      FROM appointments a JOIN specialties s ON s.id=a.specialty_id
-      WHERE a.id=$1
-    `, [row.id]);
-
-    res.status(201).json(fmt(full));
+    const full = await getCollection("appointments").findOne({ _id: row.insertedId });
+    res.status(201).json(fmt({ ...full, specialtyName: speciality.name }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -126,15 +154,16 @@ router.post("/", async (req, res) => {
 
 // ─── GET /api/appointments/:id ───────────────────────────────────────────────
 router.get("/:id", async (req, res) => {
-  try {
-    const { rows: [row] } = await pool.query(`
-      SELECT a.*, s.name AS specialty_name
-      FROM appointments a JOIN specialties s ON s.id=a.specialty_id
-      WHERE a.id=$1
-    `, [req.params.id]);
+  if (!isValidAppointmentId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid appointment ID" });
+  }
 
+  try {
+    const row = await getCollection("appointments").findOne({ _id: new ObjectId(req.params.id) });
     if (!row) return res.status(404).json({ error: "Appointment not found" });
-    res.json(fmt(row));
+
+    const speciality = await getCollection("specialities").findOne({ _id: new ObjectId(row.specialtyId) });
+    res.json(fmt({ ...row, specialtyName: speciality?.name || null }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -143,6 +172,10 @@ router.get("/:id", async (req, res) => {
 
 // ─── PATCH /api/appointments/:id ─────────────────────────────────────────────
 router.patch("/:id", async (req, res) => {
+  if (!isValidAppointmentId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid appointment ID" });
+  }
+
   try {
     const { status } = req.body;
     const allowed = ["pending", "confirmed", "cancelled"];
@@ -150,19 +183,17 @@ router.patch("/:id", async (req, res) => {
       return res.status(400).json({ error: "Invalid status" });
     }
 
-    const { rows: [updated] } = await pool.query(
-      "UPDATE appointments SET status=$1 WHERE id=$2 RETURNING *",
-      [status, req.params.id]
+    const updatedResult = await getCollection("appointments").findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { status } },
+      { returnDocument: "after" }
     );
-    if (!updated) return res.status(404).json({ error: "Not found" });
 
-    const { rows: [full] } = await pool.query(`
-      SELECT a.*, s.name AS specialty_name
-      FROM appointments a JOIN specialties s ON s.id=a.specialty_id
-      WHERE a.id=$1
-    `, [updated.id]);
+    const updated = updatedResult?.value ?? updatedResult;
+    if (!updated) return res.status(404).json({ error: "Appointment not found" });
 
-    res.json(fmt(full));
+    const speciality = await getCollection("specialities").findOne({ _id: new ObjectId(updated.specialtyId) });
+    res.json(fmt({ ...updated, specialtyName: speciality?.name || null }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

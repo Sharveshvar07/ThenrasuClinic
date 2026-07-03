@@ -1,137 +1,69 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../api";
+import Toast from "../components/Toast";
 import "./../css/login.css";
 
 export default function PatientLogin() {
-
-const [email,setEmail]=useState("");
-const [password,setPassword]=useState("");
-
-const handleSubmit=(e)=>{
-e.preventDefault();
-
-if(email==="patient@gmail.com" && password==="123456"){
-alert("Patient Login Successful");
-}
-else{
-alert("Invalid Credentials");
-}
-
-}
-
-return(
-
-<div className="login-container">
-
-<form className="login-form" onSubmit={handleSubmit}>
-
-<h2>Patient Login</h2>
-
-<input
-type="email"
-placeholder="Email"
-value={email}
-onChange={(e)=>setEmail(e.target.value)}
-required
-/>
-
-<input
-type="password"
-placeholder="Password"
-value={password}
-onChange={(e)=>setPassword(e.target.value)}
-required
-/>
-
-<button>Login</button>
-
-</form>
-
-</div>
-
-)
-
-}
-
-import { useState } from "react";
-
-export default function PatientLogin() {
-
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  const login = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (email === "patient@gmail.com" && password === "123456") {
-      alert("Patient Login Successful");
-    } else {
-      alert("Invalid Patient Credentials");
+    try {
+      const { data } = await loginUser({ role: "patient", email, password });
+      localStorage.setItem(
+        "clinicAuth",
+        JSON.stringify({ token: data.token, user: data.user })
+      );
+      setToast({ message: "Login successful", type: "success" });
+      setTimeout(() => navigate("/appointments"), 700);
+    } catch (err) {
+      const message = err.response?.data?.message || "Invalid credentials";
+      setToast({ message, type: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "80vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f5f8ff",
-      }}
-    >
-      <form
-        onSubmit={login}
-        style={{
-          width: "400px",
-          background: "#fff",
-          padding: "35px",
-          borderRadius: "12px",
-          boxShadow: "0 5px 15px rgba(0,0,0,.15)",
-        }}
-      >
-        <h2 style={{ textAlign: "center", color: "#0d6efd" }}>
-          Patient Login
-        </h2>
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{
-            width: "100%",
-            padding: "12px",
-            margin: "15px 0",
-          }}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "20px",
-          }}
-        />
-
-        <button
-          style={{
-            width: "100%",
-            padding: "12px",
-            background: "#0d6efd",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-          }}
+    <div className="login-selection">
+      <div className="login-container">
+        <form
+          className="login-form"
+          onSubmit={handleSubmit}
+          style={{ maxWidth: "420px", margin: "0 auto" }}
         >
-          Login
-        </button>
-      </form>
+          <h2>Patient Login</h2>
+          <p>Access booking and appointment services.</p>
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

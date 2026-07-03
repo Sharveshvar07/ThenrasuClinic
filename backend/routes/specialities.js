@@ -1,24 +1,19 @@
 import { Router } from "express";
-import pool from "../db.js";
+import { getCollection } from "../mongodb.js";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        id,
-        name,
-        description,
-        icon,
-        available
-      FROM specialities
-      ORDER BY id
-    `);
-    res.json(result.rows);
+    const specialities = await getCollection("specialities")
+      .find({}, { projection: { name: 1, description: 1, icon: 1, available: 1 } })
+      .sort({ name: 1 })
+      .toArray();
+
+    res.json(specialities);
   } catch (err) {
-    console.error("❌ specialities ERROR:", err.message);  // shows in terminal
-    res.status(500).json({ error: err.message });          // shows in browser
+    console.error("❌ specialities ERROR:", err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 

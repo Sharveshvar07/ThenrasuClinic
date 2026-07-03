@@ -38,6 +38,9 @@ export default function Footer() {
           </div>
         </div>
       </div>
+      <div className="footer-links">
+        <Link to="/privacy">Privacy</Link>
+      </div>
       <div className="footer-bottom">
         &copy; {new Date().getFullYear()} Dr. Thennarasu Multispeciality Clinic. All rights reserved.
       </div>

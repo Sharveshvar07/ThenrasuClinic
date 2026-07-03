@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import Book from "./pages/Book";
@@ -24,25 +25,27 @@ function App() {
           minHeight: "100vh",
         }}
       >
-        {/* Navbar */}
         <Navbar />
 
-        {/* Main Content */}
         <main style={{ flex: 1 }}>
           <Routes>
-            {/* Existing Pages */}
             <Route path="/" element={<Home />} />
             <Route path="/book" element={<Book />} />
-            <Route path="/appointments" element={<Appointments />} />
+            <Route
+              path="/appointments"
+              element={
+                <ProtectedRoute allowedRole="hospital">
+                  <Appointments />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Login Pages */}
             <Route path="/login" element={<Login />} />
             <Route path="/patient-login" element={<PatientLogin />} />
             <Route path="/hospital-login" element={<HospitalLogin />} />
           </Routes>
         </main>
 
-        {/* Footer */}
         <Footer />
       </div>
     </BrowserRouter>

@@ -1,57 +1,22 @@
 import { Link } from "react-router-dom";
+import "./../css/login.css";
 
 export default function Login() {
   return (
-    <div
-      style={{
-        minHeight: "80vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f5f8ff",
-      }}
-    >
-      <div style={{ textAlign: "center" }}>
-        <h1 style={{ color: "#0d6efd" }}>Choose Login</h1>
-        <p>Select your login type</p>
+    <div className="login-selection">
+      <div className="login-container">
+        <h1 className="login-title">Choose Login</h1>
+        <p className="login-subtitle">Select your login type</p>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "30px",
-            marginTop: "30px",
-          }}
-        >
-          <Link
-            to="/patient-login"
-            style={{
-              width: "280px",
-              padding: "30px",
-              textDecoration: "none",
-              background: "white",
-              borderRadius: "15px",
-              boxShadow: "0 5px 15px rgba(0,0,0,0.15)",
-              color: "black",
-            }}
-          >
-            <h1>👤</h1>
+        <div className="login-boxes">
+          <Link to="/patient-login" className="login-card">
+            <div className="login-icon">👤</div>
             <h2>Patient Login</h2>
             <p>Book appointments and view reports.</p>
           </Link>
 
-          <Link
-            to="/hospital-login"
-            style={{
-              width: "280px",
-              padding: "30px",
-              textDecoration: "none",
-              background: "white",
-              borderRadius: "15px",
-              boxShadow: "0 5px 15px rgba(0,0,0,0.15)",
-              color: "black",
-            }}
-          >
-            <h1>🏥</h1>
+          <Link to="/hospital-login" className="login-card">
+            <div className="login-icon">🏥</div>
             <h2>Hospital Login</h2>
             <p>Manage appointments and patients.</p>
           </Link>

@@ -2,17 +2,32 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getSpecialities, getAppointments, createAppointment } from "../api";
 import SpecialtyIcon from "../components/SpecialtyIcon";
+import Toast from "../components/Toast";
 
 const TIME_SLOTS = [
-  { value: "09:00 AM - 10:30 AM", label: "09:00 AM - 10:30 AM", capacity: 6 },
-  { value: "10:30 AM - 12:30 PM", label: "10:30 AM - 12:30 PM", capacity: 8 },
-  { value: "02:00 PM - 03:30 PM", label: "02:00 PM - 03:30 PM", capacity: 6 },
-  { value: "03:30 PM - 05:00 PM", label: "03:30 PM - 05:00 PM", capacity: 6 },
+  { value: "09:00 AM - 10:30 AM", label: "09:00 AM - 10:30 AM", capacity: 10 },
+  { value: "10:30 AM - 12:30 PM", label: "10:30 AM - 12:30 PM", capacity: 10 },
+  { value: "02:00 PM - 03:30 PM", label: "02:00 PM - 03:30 PM", capacity: 10 },
+  { value: "03:30 PM - 05:00 PM", label: "03:30 PM - 05:00 PM", capacity: 10 },
+];
+
+const DENTAL_TIME_SLOTS = [
+  { value: "08:00 AM - 10:00 AM", label: "08:00 AM - 10:00 AM", capacity: 6 },
+  { value: "02:00 PM - 04:00 PM", label: "02:00 PM - 04:00 PM", capacity: 6 },
+  { value: "05:00 PM - 09:00 PM", label: "05:00 PM - 09:00 PM", capacity: 8 },
 ];
 
 export default function Book() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const getStoredAuth = () => {
+    try {
+      return JSON.parse(localStorage.getItem("clinicAuth") || "null");
+    } catch {
+      return null;
+    }
+  };
 
   const [specialities, setspecialities] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -20,8 +35,10 @@ export default function Book() {
   const [submitting, setSubmitting]     = useState(false);
   const [success, setSuccess]           = useState(false);
   const [errors, setErrors]             = useState({});
+  const [toast, setToast]               = useState(null);
 
   const [form, setForm] = useState({
+    department:      "",
     specialtyId:     searchParams.get("specialty") || "",
     patientName:     "",
     patientAge:      "",
@@ -33,8 +50,20 @@ export default function Book() {
     reason:          "",
   });
 
+  // Prefill patient info from logged in user (if any)
+  useEffect(() => {
+    const auth = getStoredAuth();
+    if (auth?.user) {
+      setForm((prev) => ({
+        ...prev,
+        patientName: prev.patientName || auth.user.name || "",
+        patientEmail: prev.patientEmail || auth.user.email || "",
+      }));
+    }
+  }, []);
+
   const isWomensHealthSelected = useMemo(() => {
-    const selected = specialities.find((s) => Number(form.specialtyId) === s.id);
+    const selected = specialities.find((s) => form.specialtyId === s._id);
     return selected?.name?.toLowerCase().replace(/['’]/g, "") === "womens health";
   }, [specialities, form.specialtyId]);
 
@@ -121,19 +150,23 @@ export default function Book() {
 
     setSubmitting(true);
     try {
-      const { data } = await createAppointment({
+      const auth = getStoredAuth();
+      const payload = {
         ...form,
-        specialtyId: Number(form.specialtyId),
-        patientAge:  Number(form.patientAge),
-        patientEmail: form.patientEmail || undefined,
-        reason:       form.reason || undefined,
-      });
+        specialtyId: form.specialtyId,
+        patientAge: Number(form.patientAge),
+        patientEmail: (auth?.user?.email || form.patientEmail)?.trim?.().toLowerCase?.() || undefined,
+        patientName: form.patientName || auth?.user?.name || undefined,
+        reason: form.reason || undefined,
+      };
+
+      const { data } = await createAppointment(payload);
       setAppointments((prev) => [...prev, data]);
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       const message = err?.response?.data?.error || "Booking failed. Please try again.";
-      alert(message);
+      setToast({ message, type: "error" });
     } finally {
       setSubmitting(false);
     }
@@ -157,6 +190,7 @@ export default function Book() {
 
   return (
     <div className="book-page">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className="book-header">
         <h1>Book an Appointment</h1>
         <p>Please fill out the form below to schedule your visit.</p>
@@ -166,75 +200,100 @@ export default function Book() {
 
        <fieldset>
   <legend>1. Select Specialty</legend>
+
   {loading ? (
-    <p style={{ color: "#64748b", fontSize: "14px" }}>Loading...</p>
+    <p style={{ color: "#64748b", fontSize: "14px", marginTop: "10px" }}>Loading...</p>
   ) : (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-        gap: "12px",
-        marginTop: "10px",
-      }}
-    >
-      {specialities.filter(s => s.available).map(s => {
-        const isSelected = Number(form.specialtyId) === s.id;
-        return (
-          <div
-            key={s.id}
-            onClick={() => { setForm({ ...form, specialtyId: s.id }); setErrors({ ...errors, specialtyId: "" }); }}
-            style={{
-              background: isSelected ? "#eff6ff" : "#fff",
-              border: isSelected ? "2px solid #2563eb" : "2px solid #e5e7eb",
-              borderRadius: "12px",
-              padding: "16px 12px",
-              cursor: "pointer",
-              textAlign: "center",
-              transition: "all 0.2s",
-            }}
-          >
-            {/* Icon */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: "10px",
-                color: isSelected ? "#2563eb" : "#e8a020",
-              }}
-            >
-              <SpecialtyIcon name={s.name} />
-            </div>
-            {/* Name */}
-            <span
-              style={{
-                display: "block",
-                fontWeight: "600",
-                fontSize: "13px",
-                color: isSelected ? "#2563eb" : "#1a3c5e",
-                marginBottom: "4px",
-              }}
-            >
-              {s.name}
-            </span>
-            {/* Doctor */}
-            <small
-              style={{
-                fontSize: "11px",
-                color: "#9ca3af",
-              }}
-            >
-              {s.doctorName}
-            </small>
+  <>
+  {/* Step 1 — Department */}
+  <p style={{ margin: "12px 0 10px", fontWeight: 600, fontSize: "14px", color: "#475569" }}>
+    Choose Department:
+  </p>
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+    {[
+      { key: "general", label: "General Medicine", icon: "family" },
+      { key: "dental",  label: "Dental",           icon: "dental"  },
+    ].map(dept => {
+      const isActive = form.department === dept.key;
+      return (
+        <div
+          key={dept.key}
+          onClick={() => {
+            setForm({ ...form, department: dept.key, specialtyId: "", appointmentTime: "" });
+            setErrors({ ...errors, specialtyId: "" });
+          }}
+          style={{
+            background: isActive ? "#eff6ff" : "#fff",
+            border: isActive ? "2px solid #2563eb" : "2px solid #e5e7eb",
+            borderRadius: "12px",
+            padding: "16px 12px",
+            cursor: "pointer",
+            textAlign: "center",
+            transition: "all 0.2s",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px", color: isActive ? "#2563eb" : "#e8a020" }}>
+            <SpecialtyIcon name={dept.icon} />
           </div>
-        );
-      })}
-    </div>
-  )}
+          <span style={{ display: "block", fontWeight: "700", fontSize: "14px", color: isActive ? "#2563eb" : "#1a3c5e" }}>
+            {dept.label}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+
+  {/* Step 2 — Sub-specialty */}
+  {form.department && (() => {
+    const DEPT_SPECIALTIES = {
+      general: ["Family Medicine", "Preventive Care", "Pediatric Care", "Women's Health"],
+      dental:  ["Dental Care", "Facial Care", "Dental Implants"],
+    };
+    const allowed = DEPT_SPECIALTIES[form.department];
+    const filtered = specialities.filter(s => s.available && allowed.some(a => s.name.toLowerCase().includes(a.toLowerCase())));
+
+    return (
+      <>
+        <p style={{ margin: "0 0 10px", fontWeight: 600, fontSize: "14px", color: "#475569" }}>
+          Choose Sub-Specialty:
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
+          {filtered.map(s => {
+            const isSelected = form.specialtyId === s._id;
+            return (
+              <div
+                key={s._id}
+                onClick={() => { setForm({ ...form, specialtyId: s._id }); setErrors({ ...errors, specialtyId: "" }); }}
+                style={{
+                  background: isSelected ? "#eff6ff" : "#fff",
+                  border: isSelected ? "2px solid #2563eb" : "2px solid #e5e7eb",
+                  borderRadius: "12px",
+                  padding: "14px 10px",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "all 0.2s",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px", color: isSelected ? "#2563eb" : "#e8a020" }}>
+                  <SpecialtyIcon name={s.name} />
+                </div>
+                <span style={{ display: "block", fontWeight: "600", fontSize: "13px", color: isSelected ? "#2563eb" : "#1a3c5e" }}>
+                  {s.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  })()}
+
   {errors.specialtyId && (
-    <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "6px" }}>
+    <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "8px" }}>
       {errors.specialtyId}
     </p>
+  )}
+  </>
   )}
 </fieldset>
 
@@ -257,7 +316,7 @@ export default function Book() {
               <label>Preferred Time *</label>
               <select name="appointmentTime" value={form.appointmentTime} onChange={handleChange}>
                 <option value="">Select a time slot</option>
-                {TIME_SLOTS.map((slot) => (
+                {(form.department === "dental" ? DENTAL_TIME_SLOTS : TIME_SLOTS).map((slot) => (
                   <option key={slot.value} value={slot.value} disabled={isSlotFull(slot)}>
                     {slot.label} {isSlotFull(slot) ? "(Full)" : `(${bookedCounts[slot.value] || 0}/${slot.capacity})`}
                   </option>

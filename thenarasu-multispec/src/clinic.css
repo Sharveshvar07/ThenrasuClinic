@@ -7,24 +7,101 @@
   box-shadow: 0 1px 4px rgba(26,39,68,.06);
 }
 .navbar-inner {
-  max-width: 1200px; margin: 0 auto;
+  max-width: 100%;
+  padding: 0 40px;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 72px;
+  height: 72px;
 }
+/* Brand (logo + name) */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.logo-container img {
+  height: 100%;
+  width: auto;
+  object-fit: cover;
+  object-position: -5px center;
+}
+.navbar-brand h2 { margin: 0; color: var(--navy); font-size: 20px; line-height: 1; }
+.navbar-brand p  { margin: 0; color: var(--gold); font-size: 13px; font-weight: 600; }
 .navbar-brand h1 { font-size: 18px; color: var(--navy); line-height: 1.2; }
 .navbar-brand p  { font-size: 12px; color: var(--gold); font-weight: 600; }
 .nav-links { display: flex; align-items: center; gap: 32px; }
 .nav-links a { font-weight: 500; color: var(--navy); transition: color .2s; }
 .nav-links a:hover, .nav-links a.active { color: var(--gold); }
 .btn-book {
-  background: var(--gold); color: var(--navy);
-  padding: 10px 22px; border-radius: 8px; font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gold);
+  color: var(--navy);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform .2s ease, opacity .2s ease, background .2s ease;
+}
+
+.btn-book:hover {
+  opacity: .95;
+  transform: translateY(-1px);
+}
+/* Ensure Book Appointment button text stays visible (black) even when nav hover rules apply */
+.nav-links a.btn-book,
+.nav-links a.btn-book:link,
+.nav-links a.btn-book:visited {
+  color: #000;
+}
+.nav-links a.btn-book:hover {
+  color: #000;
 }
 .hamburger { display: none; font-size: 24px; background: none; border: none; cursor: pointer; }
 @media(max-width:768px){
+  .navbar-inner { padding: 0 18px; }
   .nav-links { display: none; flex-direction: column; position: absolute; top: 72px; left: 0; right: 0; background: #fff; padding: 16px; box-shadow: 0 4px 8px rgba(0,0,0,.1); }
   .nav-links.open { display: flex; }
   .hamburger { display: block; }
+}
+
+.hero {
+  min-height: 700px; display: flex; align-items: center;
+  background-size: cover;
+  background-position: center;
+  padding: 80px 24px;
+}
+.hero-content { max-width: 700px; margin: 0 auto; color: #fff; }
+.hero h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; margin-bottom: 24px; }
+.hero p { font-size: clamp(1rem, 1.1vw, 1.4rem); margin-bottom: 24px; }
+.hero-buttons { display: flex; flex-wrap: wrap; gap: 16px; }
+
+@media(max-width: 1024px) {
+  .hero { padding: 60px 24px; min-height: 620px; }
+}
+
+@media(max-width: 768px) {
+  .hero { padding: 50px 18px; min-height: 540px; }
+  .hero-content { text-align: left; }
+  .hero-buttons { flex-direction: column; align-items: stretch; }
+  .hero h1 { font-size: clamp(32px, 8vw, 48px); }
+}
+
+@media(max-width: 600px) {
+  .hero { padding: 40px 16px; min-height: 500px; }
+  .specialities-section { padding: 60px 16px; }
 }
 
 /* ── HERO ────────────────────────────────────────────────────────────────── */
@@ -53,6 +130,9 @@
   background: #fff; border: 1px solid var(--border); border-radius: 16px;
   padding: 32px 24px; transition: transform .3s, box-shadow .3s;
 }
+.specialty-card h3 { margin: 0 0 8px; font-size: 18px; color: var(--navy); }
+.specialty-card p  { margin: 0; color: var(--gray); font-size: 14px; }
+.specialty-card small { display: block; margin-top: 10px; }
 .specialty-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(26,39,68,.1); }
 .profile-card { transition: transform .3s ease, box-shadow .3s ease; }
 .profile-card:hover { transform: translateY(-6px); box-shadow: 0 24px 40px rgba(15,23,42,.18); }
@@ -64,6 +144,91 @@
 .specialty-footer { display: flex; justify-content: space-between; align-items: center; }
 .specialty-footer span { font-size: 14px; font-weight: 500; color: var(--navy); }
 .btn-arrow { color: var(--gold); font-weight: 700; }
+
+/* Doctors */
+.doctors-section { padding: 60px 24px; max-width: 1200px; margin: 0 auto; }
+
+/* ── Responsive adjustments for Appointments & general layout ───────────── */
+.appointments-page { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.appointments-header { padding: 8px 0 20px; }
+.appointments-header h1 { font-size: 34px; }
+
+/* Desktop: grid of cards */
+.appointments-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+.apt-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* Highlight cancelled appointments so they're always visible on mobile */
+.apt-card.apt-cancelled {
+  border-left: 4px solid #991b1b;
+  background: #fff6f6;
+}
+.apt-card.apt-cancelled .badge {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+}
+.apt-info { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.apt-info > div { flex: 1; }
+.apt-actions { display: flex; gap: 8px; align-items: center; }
+.apt-detail { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.badge { font-size: 13px; padding: 6px 10px; display: inline-block; border-radius: 999px; }
+
+/* Tablet / small desktop tweaks */
+@media (max-width: 1024px) {
+  .appointments-page { padding: 16px; }
+  .appointments-header h1 { font-size: 30px; }
+  .appointments-list { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .apt-card { padding: 18px; }
+}
+
+/* Mobile: single column, stack elements vertically */
+@media (max-width: 600px) {
+  .navbar-inner { padding: 8px 12px; height: 68px; }
+  .logo-container { width: 48px; height: 48px; }
+  .navbar-brand h2 { font-size: 16px; }
+
+  .nav-links { gap: 12px; }
+  .nav-links.open { padding: 12px; }
+  .nav-links a, .nav-links button { width: 100%; text-align: left; }
+
+  .btn-book { padding: 10px 14px; font-size: 14px; }
+  .nav-links a.btn-book { color: #000; }
+
+  .appointments-list { grid-template-columns: 1fr; gap: 16px; }
+  .apt-card { padding: 16px; border-radius: 12px; }
+  .apt-card.apt-cancelled { border-left-width: 6px; }
+  .apt-info { flex-direction: column; gap: 8px; }
+  .apt-actions { justify-content: flex-start; margin-top: 8px; }
+  .appointments-header h1 { font-size: 26px; }
+}
+.doctors-grid { display: grid; justify-content: center; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 24px; }
+.profile-card {
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.profile-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  height: 350px;
+  object-fit: cover;
+  display: block;
+}
+.profile-card h3 { margin: 8px 0 4px; font-size: 18px; }
+.profile-card p { margin: 0; }
+
+@media(max-width:768px){ .doctors-section { padding: 40px 16px; } }
 
 /* ── CTA ─────────────────────────────────────────────────────────────────── */
 .cta-section {
@@ -113,13 +278,111 @@
 .specialty-option span { display: block; font-size: 13px; font-weight: 600; }
 .specialty-option small { display: block; font-size: 11px; color: var(--gray); margin-top: 4px; }
 
-.btn-submit {
-  background: var(--gold); color: var(--navy); border: none;
-  padding: 18px; border-radius: 10px; font-size: 18px; font-weight: 700;
-  cursor: pointer; transition: opacity .2s;
+.btn-submit, .btn-confirm, .btn-cancel, .nav-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s ease;
 }
-.btn-submit:hover { opacity: .85; }
-.btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn-submit {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+.btn-confirm {
+  background: #065f46;
+  color: #fff;
+}
+
+.btn-cancel {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-submit:hover,
+.btn-confirm:hover,
+.btn-cancel:hover,
+.nav-logout:hover {
+  opacity: .92;
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.nav-logout {
+  background: rgba(15, 23, 42, .08);
+  color: var(--navy);
+  padding: 12px 18px;
+}
+
+.nav-badge {
+  background: rgba(249, 115, 22, .12);
+  color: #b45309;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  min-width: 280px;
+  max-width: calc(100vw - 48px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+  overflow: hidden;
+}
+
+/* Very small screens adjustments */
+@media (max-width: 480px) {
+  .appointments-page { padding: 12px 12px; }
+  .appointments-header h1 { font-size: 22px; }
+  .appointments-header p { font-size: 14px; }
+  .stats-bar { width: 100%; }
+  .stat { padding: 8px 10px; }
+  .stat strong { font-size: 18px; }
+  .apt-card { padding: 12px; }
+  .specialty-label { font-size: 13px; }
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.toast-info { border-left: 4px solid #0ea5e9; }
+.toast-success { border-left: 4px solid #16a34a; }
+.toast-error { border-left: 4px solid #dc2626; }
+
+.toast-close {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
 
 /* Confirmation */
 .confirmation { min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
@@ -139,27 +402,44 @@
 .confirmation-buttons .btn-outline { color: var(--navy); border-color: var(--border); padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; background: none; }
 
 /* ── APPOINTMENTS ────────────────────────────────────────────────────────── */
-.appointments-page { padding: 60px 24px; max-width: 960px; margin: 0 auto; }
-.appointments-header { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; }
-.appointments-header h1 { font-size: 36px; color: var(--navy); margin-bottom: 8px; }
-.appointments-header p  { color: var(--gray); }
-.stats-bar { display: flex; gap: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.stat { padding: 16px 24px; text-align: center; border-right: 1px solid var(--border); }
+.appointments-page { padding: 40px 18px; max-width: 960px; margin: 0 auto; }
+.appointments-header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.appointments-header h1 { font-size: 32px; color: var(--navy); margin: 0; }
+.appointments-header p  { color: var(--gray); margin: 6px 0 0; }
+.stats-bar { display: flex; gap: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex-wrap: wrap; }
+.stat { padding: 12px 14px; text-align: center; border-right: 1px solid var(--border); min-width: 80px; }
 .stat:last-child { border-right: none; }
 .stat span  { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gray); margin-bottom: 4px; }
-.stat strong { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--navy); }
+.stat strong { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); }
 .stat strong.yellow { color: #92400e; }
 .stat strong.green  { color: #065f46; }
 .stat strong.red    { color: #991b1b; }
 
 .appointments-list { display: flex; flex-direction: column; gap: 16px; }
 .apt-card {
-  background: #fff; border: 1px solid var(--border); border-radius: 14px;
-  padding: 24px; cursor: pointer; transition: box-shadow .2s;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  cursor: pointer;
+  transition: box-shadow .2s;
 }
 .apt-card:hover { box-shadow: 0 8px 24px rgba(26,39,68,.08); }
+.apt-card-main { display: flex; flex-direction: column; gap: 16px; }
+.apt-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 170px;
+}
+.apt-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .apt-info { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 16px; align-items: center; }
-@media(max-width:700px){ .apt-info { grid-template-columns: 1fr; } }
+@media(max-width:900px){ .apt-card { grid-template-columns: 1fr; } .apt-info { grid-template-columns: 1fr; } .apt-side { align-items: flex-start; } .apt-actions { justify-content: flex-start; } }
 .specialty-label { font-size: 14px; color: var(--navy); font-weight: 700; display: block; margin-bottom: 4px; }
 
 /* _This response is too long to display in full._ */
@@ -268,5 +548,86 @@
 
   .footer {
     padding: 50px 20px 20px;
+  }
+}
+/* Responsive hero and navbar enhancements */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 700px;
+  background-size: cover;
+  background-position: center;
+  padding: 80px 24px;
+}
+.hero-content {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #fff;
+}
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    min-height: 620px;
+    padding: 60px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: 540px;
+    padding: 50px 18px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    min-height: 480px;
+    padding: 40px 16px;
+  }
+
+  .specialities-section {
+    padding: 60px 16px;
+  }
+}
+
+/* Force Specialty Selection Grid to 2x4 layout on Mobile */
+@media (max-width: 768px) {
+  .book-form fieldset:first-of-type > div {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    margin-top: 10px !important;
+  }
+  
+  .book-form fieldset:first-of-type > div > div {
+    padding: 12px 4px !important;
+    border-radius: 8px !important;
+  }
+  
+  .book-form fieldset:first-of-type > div > div svg {
+    width: 24px !important;
+    height: 24px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .book-form fieldset:first-of-type > div > div span {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
+  }
+  
+  .book-form fieldset:first-of-type > div > div small {
+    font-size: 8px !important;
+    display: block !important;
   }
 }

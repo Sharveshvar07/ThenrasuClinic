@@ -1,8 +1,24 @@
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../Images/Logo.jpeg";
+
+const getStoredAuth = () => {
+  try {
+    return JSON.parse(localStorage.getItem("clinicAuth") || "null");
+  } catch {
+    return null;
+  }
+};
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [auth, setAuth] = useState(getStoredAuth());
+
+  useEffect(() => {
+    setAuth(getStoredAuth());
+  }, [location.pathname]);
 
   const linkStyle = (path) => ({
     textDecoration: "none",
@@ -12,117 +28,60 @@ export default function Navbar() {
   });
 
   return (
-    <header
-      style={{
-        background: "#fff",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "auto",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "10px 30px",
-        }}
-      >
-        {/* Logo */}
-        <Link
-          to="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            textDecoration: "none",
-            color: "#000",
-            gap: "20px",
-          }}
-        >
-          <img
-            src={Logo}
-            alt="Clinic Logo"
-            style={{
-              width: "140px",
-              height: "75px",
-              objectFit: "contain",
-            }}
-          />
-
+    <header className="navbar">
+      <div className="navbar-inner">
+        <Link to="/" className="navbar-brand">
+          <div className="logo-container">
+            <img
+              src={Logo}
+              alt="Clinic Logo"
+            />
+          </div>
           <div>
-            <h2
-              style={{
-                margin: 0,
-                color: "#0d6efd",
-              }}
-            >
-              Dr. Thennarasu
-            </h2>
-
-            <p
-              style={{
-                margin: 0,
-                color: "#666",
-                fontSize: "14px",
-              }}
-            >
-              Multispeciality Clinic
-            </p>
+            <h2>Dr. Thennarasu</h2>
+            <p>Multispeciality Clinic</p>
           </div>
         </Link>
 
-        {/* Navigation */}
-        <nav
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "25px",
-          }}
-        >
-          <Link to="/" style={linkStyle("/")}>
+        <button className="hamburger" onClick={() => setMenuOpen((open) => !open)}>
+          ☰
+        </button>
+
+        <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
+          <Link to="/" style={linkStyle("/")} onClick={() => setMenuOpen(false)}>
             Home
           </Link>
 
-          <Link to="/appointments" style={linkStyle("/appointments")}>
+          <Link to="/appointments" style={linkStyle("/appointments")} onClick={() => setMenuOpen(false)}>
             Appointments
           </Link>
 
-          <Link to="/pricing" style={linkStyle("/pricing")}>
+          <Link to="/pricing" style={linkStyle("/pricing")} onClick={() => setMenuOpen(false)}>
             Pricing
           </Link>
 
-          <Link
-            to="/login"
-            style={{
-              textDecoration: "none",
-              color:
-                location.pathname === "/login" ||
-                location.pathname === "/patient-login" ||
-                location.pathname === "/hospital-login"
-                  ? "#0d6efd"
-                  : "#333",
-              fontWeight: "600",
-            }}
-          >
-            Login
-          </Link>
-
-          <Link
-            to="/book"
-            style={{
-              background: "#0d6efd",
-              color: "#fff",
-              textDecoration: "none",
-              padding: "10px 20px",
-              borderRadius: "25px",
-              fontWeight: "600",
-            }}
-          >
+          <Link to="/book" className="btn-book" onClick={() => setMenuOpen(false)}>
             Book Appointment
           </Link>
+
+          {auth?.user ? (
+            <button
+              type="button"
+              className="nav-logout"
+              onClick={() => {
+                localStorage.removeItem("clinicAuth");
+                setAuth(null);
+                setMenuOpen(false);
+                navigate("/");
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <Link to="/login" style={linkStyle("/login")} onClick={() => setMenuOpen(false)}>
+              Login
+            </Link>
+          )}
         </nav>
       </div>
     </header>

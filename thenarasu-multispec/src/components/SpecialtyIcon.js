@@ -20,6 +20,59 @@ export default function SpecialtyIcon({ name }) {
     </svg>
   );
 
+  // Map common icon keywords (from DB) to the same icons used on the selection grid
+  if (n.includes("heart")) return (
+    <svg {...p}>
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+      <path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h4.78" />
+    </svg>
+  );
+
+  if (n.includes("smile")) return (
+    <svg {...p}>
+      <path d="M12 2C9 2 6 4 6 7c0 1.5.5 2.5.5 2.5S5 14 5 17c0 2 1 3 2.5 3S10 18 12 18s2.5 2 4.5 2S20 19 20 17c0-3-1.5-7.5-1.5-7.5S19 8.5 19 7c0-3-3-5-7-5Z" />
+    </svg>
+  );
+
+  if (n.includes("spark")) return (
+    <svg {...p}>
+      <circle cx="12" cy="12" r="5" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+
+  if (n.includes("shield")) return (
+    <svg {...p}>
+      <path d="M12 2l8 4v6c0 5-4 9-8 10-4-1-8-5-8-10V6l8-4z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+
+  if (n.includes("activity")) return (
+    <svg {...p}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  );
+
+  if (n.includes("baby")) return (
+    <svg {...p}>
+      <circle cx="12" cy="5" r="2" />
+      <path d="M12 7v6" />
+      <path d="M8 11l4 2 4-2" />
+      <path d="M9 17l3 2 3-2" />
+      <path d="M9 17v-4" /><path d="M15 17v-4" />
+    </svg>
+  );
+
+  if (n.includes("users")) return (
+    <svg {...p}>
+      <circle cx="12" cy="9" r="6" />
+      <path d="M12 15v6" />
+      <path d="M9 19h6" />
+    </svg>
+  );
+
   if (n.includes("dental")) return (
     <svg {...p}>
       <path d="M12 2C9 2 6 4 6 7c0 1.5.5 2.5.5 2.5S5 14 5 17c0 2 1 3 2.5 3S10 18 12 18s2.5 2 4.5 2S20 19 20 17c0-3-1.5-7.5-1.5-7.5S19 8.5 19 7c0-3-3-5-7-5Z" />
