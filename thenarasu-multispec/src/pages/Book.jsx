@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { getSpecialities, getAppointments, createAppointment } from "../api";
 import SpecialtyIcon from "../components/SpecialtyIcon";
 import Toast from "../components/Toast";
@@ -18,7 +18,7 @@ const DENTAL_TIME_SLOTS = [
 ];
 
 export default function Book() {
-  const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
 
   const getStoredAuth = () => {
@@ -36,6 +36,8 @@ export default function Book() {
   const [success, setSuccess]           = useState(false);
   const [errors, setErrors]             = useState({});
   const [toast, setToast]               = useState(null);
+  const [bookedAppointment, setBookedAppointment] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   const [form, setForm] = useState({
     department:      "",
@@ -45,6 +47,7 @@ export default function Book() {
     patientGender:   "",
     patientPhone:    "",
     patientEmail:    "",
+    patientAddress:  "",
     appointmentDate: "",
     appointmentTime: "",
     reason:          "",
@@ -58,6 +61,10 @@ export default function Book() {
         ...prev,
         patientName: prev.patientName || auth.user.name || "",
         patientEmail: prev.patientEmail || auth.user.email || "",
+        patientPhone: prev.patientPhone || auth.user.phone || "",
+        patientAge: prev.patientAge || auth.user.age || "",
+        patientGender: prev.patientGender || auth.user.gender || "",
+        patientAddress: prev.patientAddress || auth.user.address || "",
       }));
     }
   }, []);
@@ -122,11 +129,21 @@ export default function Book() {
     e.patientEmail = "Enter a valid email address";
   }
 
+  if (!form.patientAddress) {
+    e.patientAddress = "Address is required";
+  } else if (form.patientAddress.trim().length < 5) {
+    e.patientAddress = "Address must be at least 5 characters";
+  }
+
   if (!form.appointmentDate)
     e.appointmentDate = "Please select a date";
 
   if (!form.appointmentTime)
     e.appointmentTime = "Please select a time slot";
+
+  if (!form.reason || !form.reason.trim()) {
+    e.reason = "Reason for visit is required";
+  }
 
   return e;
 };
@@ -150,18 +167,21 @@ export default function Book() {
 
     setSubmitting(true);
     try {
-      const auth = getStoredAuth();
       const payload = {
         ...form,
         specialtyId: form.specialtyId,
         patientAge: Number(form.patientAge),
-        patientEmail: (auth?.user?.email || form.patientEmail)?.trim?.().toLowerCase?.() || undefined,
-        patientName: form.patientName || auth?.user?.name || undefined,
-        reason: form.reason || undefined,
+        patientName: form.patientName?.trim(),
+        patientPhone: form.patientPhone?.trim(),
+        patientEmail: form.patientEmail?.trim().toLowerCase(),
+        patientAddress: form.patientAddress?.trim(),
+        reason: form.reason?.trim(),
       };
 
       const { data } = await createAppointment(payload);
       setAppointments((prev) => [...prev, data]);
+      setBookedAppointment(data);
+      setShowDetailsModal(true);
       setSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -180,10 +200,71 @@ export default function Book() {
           <h2>Booking Confirmed!</h2>
           <p>Thank you for choosing our Clinic. We have received your appointment request.</p>
           <div className="confirmation-buttons">
-            <button onClick={() => navigate("/appointments")} className="btn-outline">View Appointments</button>
-            <button onClick={() => navigate("/")} className="btn-primary">Return Home</button>
+            <a href="tel:+919092663216" className="btn-outline" style={{ textDecoration: "none", textAlign: "center" }}>📞 Call Us</a>
+            <a href="https://wa.me/919092663216?text=Hi%2C%20I%20just%20booked%20an%20appointment%20at%20Dr.%20Thennarasu%20Clinic.%20Please%20confirm." target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ textDecoration: "none", textAlign: "center" }}>💬 WhatsApp Chat</a>
           </div>
         </div>
+
+        {showDetailsModal && bookedAppointment && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3>Appointment Details</h3>
+                <p>Please review your booking details below.</p>
+              </div>
+
+              <div className="modal-details">
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Specialty & Doctor</span>
+                  <span className="modal-detail-value">
+                    {bookedAppointment.specialtyName} &mdash; {bookedAppointment.doctorName || "Assigned Doctor"}
+                  </span>
+                </div>
+
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Preferred Date & Time</span>
+                  <span className="modal-detail-value">
+                    {new Date(bookedAppointment.appointmentDate + "T00:00:00").toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })} at {bookedAppointment.appointmentTime}
+                  </span>
+                </div>
+
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Patient Info</span>
+                  <span className="modal-detail-value">
+                    {bookedAppointment.patientName} ({bookedAppointment.patientAge} &bull; {bookedAppointment.patientGender})
+                  </span>
+                </div>
+
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Contact Details</span>
+                  <span className="modal-detail-value">
+                    📞 {bookedAppointment.patientPhone} {bookedAppointment.patientEmail && `| 📧 ${bookedAppointment.patientEmail}`}
+                  </span>
+                </div>
+
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Patient Address</span>
+                  <span className="modal-detail-value">{bookedAppointment.patientAddress}</span>
+                </div>
+
+                <div className="modal-detail-item">
+                  <span className="modal-detail-label">Reason for Visit</span>
+                  <span className="modal-detail-value">{bookedAppointment.reason}</span>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button onClick={() => setShowDetailsModal(false)} className="modal-close-btn">
+                  Close & Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -219,7 +300,10 @@ export default function Book() {
         <div
           key={dept.key}
           onClick={() => {
-            setForm({ ...form, department: dept.key, specialtyId: "", appointmentTime: "" });
+            const specDoc = dept.key === "general"
+              ? specialities.find(s => s.name.toLowerCase() === "family medicine")
+              : specialities.find(s => s.name.toLowerCase() === "dental care");
+            setForm({ ...form, department: dept.key, specialtyId: specDoc ? specDoc._id : "", appointmentTime: "" });
             setErrors({ ...errors, specialtyId: "" });
           }}
           style={{
@@ -242,51 +326,6 @@ export default function Book() {
       );
     })}
   </div>
-
-  {/* Step 2 — Sub-specialty */}
-  {form.department && (() => {
-    const DEPT_SPECIALTIES = {
-      general: ["Family Medicine", "Preventive Care", "Pediatric Care", "Women's Health"],
-      dental:  ["Dental Care", "Facial Care", "Dental Implants"],
-    };
-    const allowed = DEPT_SPECIALTIES[form.department];
-    const filtered = specialities.filter(s => s.available && allowed.some(a => s.name.toLowerCase().includes(a.toLowerCase())));
-
-    return (
-      <>
-        <p style={{ margin: "0 0 10px", fontWeight: 600, fontSize: "14px", color: "#475569" }}>
-          Choose Sub-Specialty:
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
-          {filtered.map(s => {
-            const isSelected = form.specialtyId === s._id;
-            return (
-              <div
-                key={s._id}
-                onClick={() => { setForm({ ...form, specialtyId: s._id }); setErrors({ ...errors, specialtyId: "" }); }}
-                style={{
-                  background: isSelected ? "#eff6ff" : "#fff",
-                  border: isSelected ? "2px solid #2563eb" : "2px solid #e5e7eb",
-                  borderRadius: "12px",
-                  padding: "14px 10px",
-                  cursor: "pointer",
-                  textAlign: "center",
-                  transition: "all 0.2s",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px", color: isSelected ? "#2563eb" : "#e8a020" }}>
-                  <SpecialtyIcon name={s.name} />
-                </div>
-                <span style={{ display: "block", fontWeight: "600", fontSize: "13px", color: isSelected ? "#2563eb" : "#1a3c5e" }}>
-                  {s.name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </>
-    );
-  })()}
 
   {errors.specialtyId && (
     <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "8px" }}>
@@ -415,8 +454,51 @@ export default function Book() {
 </div>
 
           <div className="form-group">
-            <label>Reason for Visit (Optional)</label>
-            <textarea name="reason" placeholder="Briefly describe your symptoms..." value={form.reason} onChange={handleChange} rows={4} />
+            <label>Patient Address *</label>
+            <textarea
+              name="patientAddress"
+              placeholder="Enter your complete address..."
+              value={form.patientAddress}
+              onChange={(e) => {
+                const val = e.target.value;
+                setForm({ ...form, patientAddress: val });
+                if (!val.trim()) {
+                  setErrors({ ...errors, patientAddress: "Address is required." });
+                } else if (val.trim().length < 5) {
+                  setErrors({ ...errors, patientAddress: "Address must be at least 5 characters." });
+                } else {
+                  setErrors({ ...errors, patientAddress: "" });
+                }
+              }}
+              rows={2}
+              style={{
+                border: errors.patientAddress ? "1.5px solid #ef4444" : "1.5px solid #d1d5db",
+              }}
+            />
+            {errors.patientAddress && <p className="error">{errors.patientAddress}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Reason for Visit *</label>
+            <textarea
+              name="reason"
+              placeholder="Briefly describe your symptoms..."
+              value={form.reason}
+              onChange={(e) => {
+                const val = e.target.value;
+                setForm({ ...form, reason: val });
+                if (!val.trim()) {
+                  setErrors({ ...errors, reason: "Reason for visit is required." });
+                } else {
+                  setErrors({ ...errors, reason: "" });
+                }
+              }}
+              rows={4}
+              style={{
+                border: errors.reason ? "1.5px solid #ef4444" : "1.5px solid #d1d5db",
+              }}
+            />
+            {errors.reason && <p className="error">{errors.reason}</p>}
           </div>
         </fieldset>
 

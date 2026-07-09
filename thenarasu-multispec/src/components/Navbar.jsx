@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Logo from "../Images/Logo.jpeg";
+import Logo from "../Images/loga .jpeg";
 
 const getStoredAuth = () => {
   try {
@@ -22,7 +22,7 @@ export default function Navbar() {
 
   const linkStyle = (path) => ({
     textDecoration: "none",
-    color: location.pathname === path ? "#0d6efd" : "#333",
+    color: location.pathname === path ? "#c9a227" : "#333",
     fontWeight: "600",
     fontSize: "16px",
   });
@@ -32,10 +32,7 @@ export default function Navbar() {
       <div className="navbar-inner">
         <Link to="/" className="navbar-brand">
           <div className="logo-container">
-            <img
-              src={Logo}
-              alt="Clinic Logo"
-            />
+            <img src={Logo} alt="Clinic Logo" />
           </div>
           <div>
             <h2>Dr. Thennarasu</h2>
@@ -52,19 +49,35 @@ export default function Navbar() {
             Home
           </Link>
 
-          <Link to="/appointments" style={linkStyle("/appointments")} onClick={() => setMenuOpen(false)}>
-            Appointments
+          <Link to="/services" style={linkStyle("/services")} onClick={() => setMenuOpen(false)}>
+            Our Service
+          </Link>
+
+          <Link to="/about" style={linkStyle("/about")} onClick={() => setMenuOpen(false)}>
+            About Us
           </Link>
 
           <Link to="/pricing" style={linkStyle("/pricing")} onClick={() => setMenuOpen(false)}>
             Pricing
           </Link>
 
+          {/* Show Dashboard only when admin is logged in — before Book Appointment */}
+          {auth?.user?.role === "hospital" && (
+            <Link
+              to="/appointments"
+              style={{ ...linkStyle("/appointments"), color: "#000" }}
+              onClick={() => setMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+          )}
+
           <Link to="/book" className="btn-book" onClick={() => setMenuOpen(false)}>
             Book Appointment
           </Link>
 
-          {auth?.user ? (
+          {/* Show logout only when admin is logged in */}
+          {auth?.user?.role === "hospital" && (
             <button
               type="button"
               className="nav-logout"
@@ -77,10 +90,6 @@ export default function Navbar() {
             >
               Logout
             </button>
-          ) : (
-            <Link to="/login" style={linkStyle("/login")} onClick={() => setMenuOpen(false)}>
-              Login
-            </Link>
           )}
         </nav>
       </div>

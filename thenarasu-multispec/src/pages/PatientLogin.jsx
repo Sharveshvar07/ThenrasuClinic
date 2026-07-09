@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../api";
 import Toast from "../components/Toast";
 import "./../css/login.css";
@@ -62,6 +62,10 @@ export default function PatientLogin() {
           <button type="submit" disabled={loading}>
             {loading ? "Signing in..." : "Login"}
           </button>
+
+          <p className="auth-switch" style={{ marginTop: "18px" }}>
+            New patient? <Link to="/patient-register">Create account</Link>
+          </p>
         </form>
       </div>
     </div>

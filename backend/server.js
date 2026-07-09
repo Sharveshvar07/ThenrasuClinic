@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectToMongo } from "./mongodb.js";
+import { connectToMongo, getCollection } from "./mongodb.js";
 import specialitiesRouter from "./routes/specialities.js";
 import appointmentsRouter from "./routes/appointments.js";
 
@@ -20,6 +20,10 @@ const demoUsers = {
     role: "patient",
     name: "Demo Patient",
     email: "patient@gmail.com",
+    phone: "9876543210",
+    age: 30,
+    gender: "Male",
+    address: "123 Demo St, Clinic City",
     password: "123456",
   },
   hospital: {
@@ -36,28 +40,45 @@ const PATIENT_TOKEN_PREFIX = "demo-patient-token:";
 // Health check
 app.get("/api/healthz", (req, res) => res.json({ status: "ok" }));
 
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { role, email, password, staffId } = req.body;
 
   if (role === "patient") {
     const normalizedEmail = email?.trim().toLowerCase();
-    if (password !== demoUsers.patient.password || !normalizedEmail) {
+    if (!normalizedEmail || !password) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const user = normalizedEmail === demoUsers.patient.email
-      ? demoUsers.patient
-      : {
-          id: demoUsers.patient.id,
-          role: demoUsers.patient.role,
-          name: demoUsers.patient.name,
-          email: normalizedEmail,
-          password: undefined,
-        };
+    const patientsCollection = getCollection("patients");
+    const patient = await patientsCollection.findOne({ email: normalizedEmail });
+
+    if (patient) {
+      if (patient.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      return res.json({
+        token: `${PATIENT_TOKEN_PREFIX}${encodeURIComponent(normalizedEmail)}`,
+        user: {
+          id: patient._id.toString(),
+          role: "patient",
+          name: patient.name,
+          email: patient.email,
+          phone: patient.phone,
+          age: patient.age,
+          gender: patient.gender,
+          address: patient.address,
+        },
+      });
+    }
+
+    if (password !== demoUsers.patient.password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     return res.json({
       token: `${PATIENT_TOKEN_PREFIX}${encodeURIComponent(normalizedEmail)}`,
-      user: { ...user, password: undefined },
+      user: { ...demoUsers.patient, password: undefined },
     });
   }
 
@@ -74,13 +95,37 @@ app.post("/api/auth/login", (req, res) => {
   return res.status(401).json({ message: "Invalid credentials" });
 });
 
-app.get("/api/auth/me", (req, res) => {
+app.get("/api/auth/me", async (req, res) => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace("Bearer ", "");
 
   if (token.startsWith(PATIENT_TOKEN_PREFIX)) {
     const email = decodeURIComponent(token.slice(PATIENT_TOKEN_PREFIX.length));
-    return res.json({ user: { id: demoUsers.patient.id, role: demoUsers.patient.role, name: demoUsers.patient.name, email, password: undefined } });
+    const patientsCollection = getCollection("patients");
+    const patient = await patientsCollection.findOne({ email });
+
+    if (patient) {
+      return res.json({
+        user: {
+          id: patient._id.toString(),
+          role: "patient",
+          name: patient.name,
+          email: patient.email,
+          phone: patient.phone,
+          age: patient.age,
+          gender: patient.gender,
+          address: patient.address,
+        },
+      });
+    }
+
+    return res.json({
+      user: {
+        ...demoUsers.patient,
+        email,
+        password: undefined,
+      },
+    });
   }
 
   if (token === "demo-hospital-token") {
@@ -88,6 +133,56 @@ app.get("/api/auth/me", (req, res) => {
   }
 
   return res.status(401).json({ message: "Unauthorized" });
+});
+
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, phone, age, gender, email, address, password } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!name || !phone || !age || !gender || !normalizedEmail || !address || !password) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    const patientsCollection = getCollection("patients");
+    const existing = await patientsCollection.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(400).json({ error: "A patient with this email already exists." });
+    }
+
+    const insertResult = await patientsCollection.insertOne({
+      name: name.trim(),
+      phone: phone.trim(),
+      age: Number(age),
+      gender: gender.trim(),
+      email: normalizedEmail,
+      address: address.trim(),
+      password,
+      createdAt: new Date(),
+    });
+
+    const user = {
+      id: insertResult.insertedId.toString(),
+      role: "patient",
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: phone.trim(),
+      age: Number(age),
+      gender: gender.trim(),
+      address: address.trim(),
+    };
+
+    return res.status(201).json({
+      token: `${PATIENT_TOKEN_PREFIX}${encodeURIComponent(normalizedEmail)}`,
+      user,
+    });
+  } catch (err) {
+    console.error(err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "A patient with this email already exists." });
+    }
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // API routes

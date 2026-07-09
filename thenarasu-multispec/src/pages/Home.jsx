@@ -1,26 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { getSpecialities } from "../api";
 import HeroBg from "../Images/homebg.jpg";
 import Thennarasu from "../Images/Thennarasu prof.jpeg";
 import Kavipriya from "../Images/kavipriya prof.jpeg";
-import SpecialtyIcon from "../components/SpecialtyIcon";
 
 export default function Home() {
-  const [specialities, setSpecialities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
+  const [doctorsVisible, setDoctorsVisible] = useState(false);
+  const doctorsRef = useRef(null);
 
   useEffect(() => {
     document.title = "Home | Dr. Thennarasu Clinic";
+    setLoading(false);
 
-    getSpecialities()
-      .then((res) => {
-        // Filter out "General Surgery" from the homepage
-        const filtered = res.data.filter(s => s.name !== "General Surgery");
-        setSpecialities(filtered);
-      })
-      .catch(console.error)
-        .finally(() => setLoading(false));
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setDoctorsVisible(true);
+      }
+    }, { threshold: 0.1 });
+
+    if (doctorsRef.current) observer.observe(doctorsRef.current);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -29,6 +39,9 @@ export default function Home() {
         className="hero"
         style={{
           backgroundImage: `linear-gradient(rgba(7,20,50,0.65), rgba(7,20,50,0.65)), url(${HeroBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: `center ${scrollY * 0.5}px`,
+          minHeight: "100vh",
         }}
       >
         <div className="hero-content">
@@ -53,20 +66,20 @@ export default function Home() {
               Book an Appointment
             </Link>
 
-            <a href="#specialities" className="btn-outline">
+            <Link to="/services" className="btn-outline">
               Our Services
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="doctors-section" id="doctors">
+      <section ref={doctorsRef} className="doctors-section" id="doctors">
         <div className="section-header">
           <h2>Our Doctors</h2>
           <p>Experienced specialists dedicated to your care.</p>
         </div>
 
-        <div className="doctors-grid">
+        <div className="doctors-grid" style={{ overflow: "hidden" }}>
           {loading ? (
             <div style={{ textAlign: 'center', gridColumn: '1/-1' }}>Loading doctors...</div>
           ) : (
@@ -75,7 +88,7 @@ export default function Home() {
                 id: 1,
                 img: Kavipriya,
                 name: 'Dr. Kavipriya',
-                title: 'Consultant - Cranio Maxillofacial Surgery',
+                title: 'Consultant - General Medicine',
                 qualification: 'MBBS,DNB (Family medicine)',
                 regNo: '172183',
                 mobile: '+91 90926 63216',
@@ -85,15 +98,24 @@ export default function Home() {
                 id: 2,
                 img: Thennarasu,
                 name: 'Dr. A.R. Thennarasu',
-                title: 'Consultant - Cranio Maxillofacial Surgery',
+                title: 'Consultant - Dental',
                 degree: 'MDS., (OMFS)',
                 fellowship: 'Fellowship in cleft and Craniofacial Surgery',
                 regNo: '29716',
                 mobile: '+91 90926 63216',
                 email: 'a.rthennarasu05@gmail.com'
               },
-            ].map((doc) => (
-              <div key={doc.id} className="profile-card">
+            ].map((doc, idx) => (
+              <div
+                key={doc.id}
+                className="profile-card"
+                style={{
+                  opacity: doctorsVisible ? 1 : 0,
+                  transform: doctorsVisible ? "translateY(0)" : "translateY(25px)",
+                  transition: "opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                  transitionDelay: `${idx * 200}ms`
+                }}
+              >
                 <div style={{ overflow: 'hidden', borderRadius: 12 }}>
                   <img src={doc.img} alt={doc.name} style={{ width: '100%', height: 350, objectFit: 'cover', display: 'block' }} />
                 </div>
@@ -128,37 +150,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="specialities-section" id="specialities">
-        <div className="section-header">
-          <h2>Our Specialities</h2>
-          <p>Choose from our list of medical specialities and experts.</p>
-        </div>
-
-        <div className="specialty-grid">
-          {specialities && specialities.length > 0 ? (
-            specialities.map((s) => (
-              <div key={s._id} className="specialty-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ minWidth: 56 }}>
-                    <SpecialtyIcon name={s.icon || s.name} />
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0 }}>{s.name}</h3>
-                    <p style={{ margin: '6px 0 0', color: 'var(--gray)' }}>{s.description}</p>
-                  </div>
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <small style={{ color: s.available ? '#065f46' : '#991b1b', fontWeight: 700 }}>{s.available ? 'Available' : 'Not Available'}</small>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--gray)' }}>
-              No specialities found.
-            </div>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

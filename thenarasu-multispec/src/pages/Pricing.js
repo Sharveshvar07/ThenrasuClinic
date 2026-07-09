@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import pricingBg from "../Images/pricingbg.jpeg";
 
@@ -131,8 +131,30 @@ const pricingCategories = [
 ];
 
 export default function Pricing() {
+  const [cardsVisible, setCardsVisible] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const cardsRef = useRef(null);
+
   useEffect(() => {
     document.title = "Pricing | Dr. Thennarasu Multispeciality Clinic";
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setCardsVisible(true);
+      }
+    }, { threshold: 0.05 });
+
+    if (cardsRef.current) observer.observe(cardsRef.current);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -142,7 +164,7 @@ export default function Pricing() {
       <section style={{
         backgroundImage: `linear-gradient(rgba(8, 30, 77, 0.72), rgba(11, 54, 120, 0.72)), url(${pricingBg})`,
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: `center ${scrollY * 0.5}px`,
         backgroundRepeat: "no-repeat",
         color: "#fff",
         minHeight: "88vh",
@@ -164,7 +186,7 @@ export default function Pricing() {
 
 
       {/* Pricing Cards */}
-      <section style={{ padding: "60px 16px", backgroundColor: "#f9fafb" }}>
+      <section ref={cardsRef} style={{ padding: "60px 16px", backgroundColor: "#f9fafb", overflow: "hidden" }}>
         <div style={{
           maxWidth: "1100px",
           margin: "0 auto",
@@ -172,13 +194,17 @@ export default function Pricing() {
           gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))",
           gap: "28px",
         }}>
-          {pricingCategories.map((cat) => (
+          {pricingCategories.map((cat, idx) => (
             <div key={cat.specialty} style={{
               backgroundColor: cat.color,
               border: `2px solid ${cat.border}`,
               borderRadius: "16px",
               overflow: "hidden",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              opacity: cardsVisible ? 1 : 0,
+              transform: cardsVisible ? "translateX(0)" : "translateX(60px)",
+              transition: "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+              transitionDelay: `${idx * 100}ms`
             }}>
               {/* Header */}
               <div style={{

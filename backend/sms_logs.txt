@@ -1,0 +1,26 @@
+
+========================================
+[9/7/2026, 9:56:23 pm] SMS SENT
+TO: +919842141123
+MESSAGE:
+New booking at Dr. Thennarasu Clinic!
+Patient: Sharveshvar STR (20, Male)
+Phone: 9360355171
+Specialty: Dental Care
+Doctor: Dr. Thennarasu
+Date: 2026-07-17
+Time: 08:00 AM - 10:00 AM
+Reason: uhfiefuiefiu
+========================================
+
+========================================
+[9/7/2026, 9:57:31 pm] SMS SENT
+TO: +919360355171
+MESSAGE:
+Dear Sharveshvar STR, your appointment request at Dr. Thennarasu Clinic has been CONFIRMED.
+Specialty: Dental Care
+Doctor: Dr. Thennarasu
+Date: 2026-07-17
+Time: 08:00 AM - 10:00 AM
+Status: Confirmed. Thank you!
+========================================

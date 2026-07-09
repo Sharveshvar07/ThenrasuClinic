@@ -5,6 +5,7 @@ const API = axios.create({
 });
 
 export const loginUser = (credentials) => API.post("/auth/login", credentials);
+export const registerPatient = (data) => API.post("/auth/register", data);
 export const getCurrentUser = (token) => API.get("/auth/me", {
   headers: { Authorization: `Bearer ${token}` },
 });

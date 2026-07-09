@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { getCollection } from "../mongodb.js";
+import { sendSMS } from "../sms.js";
 
 const router = Router();
 
@@ -22,14 +23,16 @@ function fmt(row) {
     id:              row._id.toString(),
     patientName:     row.patientName,
     patientAge:      row.patientAge,
-    patientGender:   row.patientGender,
+    patientGender:   row.patientGender   ?? null,
     patientPhone:    row.patientPhone,
-    patientEmail:    row.patientEmail ?? null,
+    patientEmail:    row.patientEmail    ?? null,
+    patientAddress:  row.patientAddress  ?? null,
     specialtyId:     row.specialtyId,
-    specialtyName:   row.specialtyName ?? null,
+    specialtyName:   row.specialtyName   ?? null,
+    doctorName:      row.doctorName      ?? null,
     appointmentDate: row.appointmentDate,
     appointmentTime: row.appointmentTime,
-    reason:          row.reason ?? null,
+    reason:          row.reason          ?? null,
     status:          row.status || "pending",
     createdAt:       row.createdAt,
   };
@@ -106,8 +109,27 @@ router.post("/", async (req, res) => {
   try {
     const {
       patientName, patientAge, patientGender, patientPhone,
-      patientEmail, specialtyId, appointmentDate, appointmentTime, reason,
+      patientEmail, patientAddress,
+      specialtyId, appointmentDate, appointmentTime, reason,
     } = req.body;
+
+    // Validate mandatory patient fields
+    if (!patientName || String(patientName).trim().length < 2) {
+      return res.status(400).json({ error: "Patient name is required (min 2 characters)" });
+    }
+    if (!patientPhone || !/^\d{10}$/.test(patientPhone)) {
+      return res.status(400).json({ error: "A valid 10-digit phone number is required" });
+    }
+    if (!patientAge || Number(patientAge) < 1 || Number(patientAge) > 120) {
+      return res.status(400).json({ error: "A valid age (1-120) is required" });
+    }
+    if (!patientAddress || String(patientAddress).trim().length < 5) {
+      return res.status(400).json({ error: "Patient address is required" });
+    }
+
+    if (!reason || String(reason).trim().length === 0) {
+      return res.status(400).json({ error: "Reason for visit is required" });
+    }
 
     // Check specialty exists
     const speciality = await getCollection("specialities").findOne({ _id: new ObjectId(specialtyId) });
@@ -130,22 +152,50 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "This time slot is already full for the selected date." });
     }
 
+    const generalOptions = ['family medicine', 'preventive care', 'pediatric care', "women's health"];
+    const dentalOptions  = ['dental care', 'facial care', 'dental implants'];
+    const specialityName = speciality.name?.toLowerCase?.();
+    const fallbackDoctor = generalOptions.includes(specialityName)
+      ? 'Dr. Kavi Priya'
+      : dentalOptions.includes(specialityName)
+      ? 'Dr. Thennarasu'
+      : 'Dr. Thennarasu';
+
+    const doctorName = speciality.doctor_name || speciality.doctorName || fallbackDoctor;
+
     const row = await getCollection("appointments").insertOne({
-      patientName,
-      patientAge,
-      patientGender,
+      patientName:     patientName.trim(),
+      patientAge:      Number(patientAge),
+      patientGender:   patientGender   || null,
       patientPhone,
-      patientEmail: patientEmail || null,
+      patientEmail:    patientEmail    ? patientEmail.trim().toLowerCase() : null,
+      patientAddress:  patientAddress.trim(),
       specialtyId,
+      specialtyName:   speciality.name,
+      doctorName,
       appointmentDate,
       appointmentTime,
-      reason: reason || null,
-      status: "pending",
-      createdAt: new Date(),
+      reason:          reason?.trim()  || null,
+      status:          "pending",
+      createdAt:       new Date(),
     });
 
     const full = await getCollection("appointments").findOne({ _id: row.insertedId });
-    res.status(201).json(fmt({ ...full, specialtyName: speciality.name }));
+
+    // Send SMS to admin with appointment details
+    const adminPhone = process.env.ADMIN_PHONE || "9092663216";
+    const adminMessage = `New booking at Dr. Thennarasu Clinic!
+Patient: ${patientName.trim()} (${patientAge}, ${patientGender || 'N/A'})
+Phone: ${patientPhone}
+Specialty: ${speciality.name}
+Doctor: ${doctorName}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+Reason: ${reason?.trim() || 'None'}`;
+    
+    sendSMS(adminPhone, adminMessage).catch(err => console.error("Error sending booking SMS to admin:", err));
+
+    res.status(201).json(fmt(full));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -193,7 +243,32 @@ router.patch("/:id", async (req, res) => {
     if (!updated) return res.status(404).json({ error: "Appointment not found" });
 
     const speciality = await getCollection("specialities").findOne({ _id: new ObjectId(updated.specialtyId) });
-    res.json(fmt({ ...updated, specialtyName: speciality?.name || null }));
+    const specialtyName = speciality?.name || updated.specialtyName || "General Care";
+
+    // Send status update SMS to patient
+    if (status === "confirmed" || status === "cancelled") {
+      const patientPhone = updated.patientPhone;
+      let patientMessage = "";
+      if (status === "confirmed") {
+        patientMessage = `Dear ${updated.patientName}, your appointment request at Dr. Thennarasu Clinic has been CONFIRMED.
+Specialty: ${specialtyName}
+Doctor: ${updated.doctorName || "Doctor"}
+Date: ${updated.appointmentDate}
+Time: ${updated.appointmentTime}
+Status: Confirmed. Thank you!`;
+      } else if (status === "cancelled") {
+        patientMessage = `Dear ${updated.patientName}, your appointment request at Dr. Thennarasu Clinic has been CANCELLED.
+Specialty: ${specialtyName}
+Doctor: ${updated.doctorName || "Doctor"}
+Date: ${updated.appointmentDate}
+Time: ${updated.appointmentTime}
+Status: Cancelled.`;
+      }
+
+      sendSMS(patientPhone, patientMessage).catch(err => console.error("Error sending status update SMS to patient:", err));
+    }
+
+    res.json(fmt({ ...updated, specialtyName: specialtyName }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

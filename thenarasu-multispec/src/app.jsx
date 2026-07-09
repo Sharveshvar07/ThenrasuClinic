@@ -10,6 +10,7 @@ import Appointments from "./pages/Appointments";
 
 import Login from "./pages/Login";
 import PatientLogin from "./pages/PatientLogin";
+import PatientRegister from "./pages/PatientRegister";
 import HospitalLogin from "./pages/HospitalLogin";
 
 import "./index.css";
@@ -42,6 +43,7 @@ function App() {
 
             <Route path="/login" element={<Login />} />
             <Route path="/patient-login" element={<PatientLogin />} />
+            <Route path="/patient-register" element={<PatientRegister />} />
             <Route path="/hospital-login" element={<HospitalLogin />} />
           </Routes>
         </main>

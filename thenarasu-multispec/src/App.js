@@ -1,16 +1,16 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import Home from "./pages/Home";
 import Book from "./pages/Book";
 import Appointments from "./pages/Appointments";
-import Login from "./pages/Login";
-import PatientLogin from "./pages/PatientLogin";
-import HospitalLogin from "./pages/HospitalLogin";
+import AdminPortal from "./pages/AdminPortal";
 import "./index.css";
 import "./clinic.css";
 import Pricing from "./pages/Pricing";
+import OurService from "./pages/OurService";
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   return (
@@ -20,26 +20,32 @@ function App() {
         <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route
-              path="/book"
-              element={
-                <ProtectedRoute allowedRole={["patient"]}>
-                  <Book />
-                </ProtectedRoute>
-              }
-            />
+            {/* Public booking — no login required */}
+            <Route path="/book" element={<Book />} />
+            {/* Admin-only appointments dashboard */}
             <Route
               path="/appointments"
               element={
-                <ProtectedRoute allowedRole={["hospital", "patient"]}>
+                <AdminRoute>
                   <Appointments />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
+            <Route path="/services" element={<OurService />} />
+            <Route path="/about" element={<AboutUs />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/patient-login" element={<PatientLogin />} />
-            <Route path="/hospital-login" element={<HospitalLogin />} />
+
+            {/* ── Hidden admin portal — not linked anywhere publicly ── */}
+            <Route path="/portal/tc-admin-access" element={<AdminPortal />} />
+
+            {/* Redirect old public login routes to home */}
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/patient-login" element={<Navigate to="/" replace />} />
+            <Route path="/patient-register" element={<Navigate to="/" replace />} />
+            <Route path="/hospital-login" element={<Navigate to="/" replace />} />
+
+            {/* 404 fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
         <Footer />
