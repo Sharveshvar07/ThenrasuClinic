@@ -25,7 +25,7 @@ export default function Footer() {
                   7G7M+R4M Uthangarai, Krishnagiri, TamilNadu
                 </a>
               </p>
-              <p>Phone: +91 9092663216</p>
+              <p>Phone: +91 8300288588 / +91 8300288788</p>
               <p>Email: a.rthennarasu05@gmail.com</p>
             </address>
           </div>

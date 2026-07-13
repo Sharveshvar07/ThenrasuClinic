@@ -21,6 +21,7 @@ export default function Appointments() {
   const [updatingId,   setUpdatingId]   = useState(null);
   const [search,       setSearch]       = useState("");
   const [filter,       setFilter]       = useState("all");
+  const [sortBy,       setSortBy]       = useState("recent");
 
   const auth = useMemo(() => getStoredAuth(), []);
   const role = auth?.user?.role;
@@ -51,7 +52,7 @@ export default function Appointments() {
   };
 
   const filtered = useMemo(() => {
-    let list = appointments;
+    let list = [...appointments];
     if (filter !== "all") list = list.filter((a) => (a.status || "pending") === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -62,8 +63,21 @@ export default function Appointments() {
           a.specialtyName?.toLowerCase().includes(q)
       );
     }
+
+    // Sort logic (recently sort method between all and pending only)
+    if (filter === "all" || filter === "pending") {
+      if (sortBy === "recent") {
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      } else {
+        list.sort((a, b) => new Date(a.appointmentDate + "T00:00:00") - new Date(b.appointmentDate + "T00:00:00"));
+      }
+    } else {
+      // For confirmed and cancelled, default sort by appointment date
+      list.sort((a, b) => new Date(a.appointmentDate + "T00:00:00") - new Date(b.appointmentDate + "T00:00:00"));
+    }
+
     return list;
-  }, [appointments, filter, search]);
+  }, [appointments, filter, search, sortBy]);
 
   const handleStatus = async (id, status) => {
     setUpdatingId(id);
@@ -128,6 +142,30 @@ export default function Appointments() {
         </div>
       </div>
 
+      {/* Sort options shown only for all & pending */}
+      {(filter === "all" || filter === "pending") && (
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, margin: "-16px 0 24px", fontSize: 14 }}>
+          <span style={{ color: "var(--gray)", fontWeight: 500 }}>Sort by:</span>
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              background: "#fff",
+              color: "var(--navy)",
+              fontWeight: 600,
+              outline: "none",
+              cursor: "pointer"
+            }}
+          >
+            <option value="recent">⏱ Recently Booked (Newest)</option>
+            <option value="appointmentDate">📅 Appointment Date</option>
+          </select>
+        </div>
+      )}
+
       {loading ? (
         <div className="skeleton-grid">
           {[1, 2, 3].map((i) => <div key={i} className="skeleton-card" />)}
@@ -155,6 +193,7 @@ export default function Appointments() {
                   <p><b>Doctor:</b> {apt.doctorName || "N/A"}</p>
                   <p><b>Date:</b> {new Date(apt.appointmentDate + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
                   <p><b>Time:</b> {apt.appointmentTime}</p>
+                  <p><b>Booked on:</b> {apt.createdAt ? new Date(apt.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }) : "N/A"}</p>
                 </div>
               </div>
 

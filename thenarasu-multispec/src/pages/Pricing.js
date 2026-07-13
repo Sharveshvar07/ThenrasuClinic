@@ -289,7 +289,7 @@ export default function Pricing() {
             <li>Final treatment cost will be communicated during consultation.</li>
             <li>Prices shown are inclusive of consultation charges unless stated otherwise.</li>
             <li>Government-approved health insurance accepted. Please carry your insurance card.</li>
-            <li>For detailed quotes on major procedures, call <a href="tel:+919092663216" style={{ color: "#e8a020", fontWeight: "600" }}>+91 9092663216</a>.</li>
+            <li>For detailed quotes on major procedures, call <a href="tel:+918300288588" style={{ color: "#e8a020", fontWeight: "600" }}>+91 8300288588 / +91 8300288788</a>.</li>
           </ul>
         </div>
       </section>
@@ -315,12 +315,12 @@ export default function Pricing() {
           }}>
             Book Now
           </Link>
-          <a href="tel:+919092663216" style={{
+          <a href="tel:+918300288588" style={{
             border: "1px solid rgba(255,255,255,0.3)", color: "#fff",
             padding: "14px 32px", borderRadius: "8px",
             fontWeight: "600", fontSize: "15px", textDecoration: "none",
           }}>
-            Call +91 9092663216
+            Call +91 8300288588 / +91 8300288788
           </a>
         </div>
       </section>

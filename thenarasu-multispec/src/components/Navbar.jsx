@@ -27,6 +27,8 @@ export default function Navbar() {
     fontSize: "16px",
   });
 
+  const isAdminPage = location.pathname === "/appointments" || location.pathname === "/portal/tc-admin-access";
+
   return (
     <header className="navbar">
       <div className="navbar-inner">
@@ -45,51 +47,92 @@ export default function Navbar() {
         </button>
 
         <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
-          <Link to="/" style={linkStyle("/")} onClick={() => setMenuOpen(false)}>
-            Home
-          </Link>
+          {isAdminPage ? (
+            <>
+              {auth?.user?.role !== "hospital" && (
+                <Link
+                  to="/portal/tc-admin-access"
+                  style={linkStyle("/portal/tc-admin-access")}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Login
+                </Link>
+              )}
 
-          <Link to="/services" style={linkStyle("/services")} onClick={() => setMenuOpen(false)}>
-            Our Service
-          </Link>
+              {auth?.user?.role === "hospital" && (
+                <Link
+                  to="/appointments"
+                  style={{ ...linkStyle("/appointments"), color: "#000" }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
 
-          <Link to="/about" style={linkStyle("/about")} onClick={() => setMenuOpen(false)}>
-            About Us
-          </Link>
+              {auth?.user?.role === "hospital" && (
+                <button
+                  type="button"
+                  className="nav-logout"
+                  onClick={() => {
+                    localStorage.removeItem("clinicAuth");
+                    setAuth(null);
+                    setMenuOpen(false);
+                    navigate("/");
+                  }}
+                >
+                  Logout
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <Link to="/" style={linkStyle("/")} onClick={() => setMenuOpen(false)}>
+                Home
+              </Link>
 
-          <Link to="/pricing" style={linkStyle("/pricing")} onClick={() => setMenuOpen(false)}>
-            Pricing
-          </Link>
+              <Link to="/services" style={linkStyle("/services")} onClick={() => setMenuOpen(false)}>
+                Our Service
+              </Link>
 
-          {/* Show Dashboard only when admin is logged in — before Book Appointment */}
-          {auth?.user?.role === "hospital" && (
-            <Link
-              to="/appointments"
-              style={{ ...linkStyle("/appointments"), color: "#000" }}
-              onClick={() => setMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-          )}
+              <Link to="/about" style={linkStyle("/about")} onClick={() => setMenuOpen(false)}>
+                About Us
+              </Link>
 
-          <Link to="/book" className="btn-book" onClick={() => setMenuOpen(false)}>
-            Book Appointment
-          </Link>
+              <Link to="/pricing" style={linkStyle("/pricing")} onClick={() => setMenuOpen(false)}>
+                Pricing
+              </Link>
 
-          {/* Show logout only when admin is logged in */}
-          {auth?.user?.role === "hospital" && (
-            <button
-              type="button"
-              className="nav-logout"
-              onClick={() => {
-                localStorage.removeItem("clinicAuth");
-                setAuth(null);
-                setMenuOpen(false);
-                navigate("/");
-              }}
-            >
-              Logout
-            </button>
+              {/* Show Dashboard only when admin is logged in — before Book Appointment */}
+              {auth?.user?.role === "hospital" && (
+                <Link
+                  to="/appointments"
+                  style={{ ...linkStyle("/appointments"), color: "#000" }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+
+              <Link to="/book" className="btn-book" onClick={() => setMenuOpen(false)}>
+                Book Appointment
+              </Link>
+
+              {/* Show logout only when admin is logged in */}
+              {auth?.user?.role === "hospital" && (
+                <button
+                  type="button"
+                  className="nav-logout"
+                  onClick={() => {
+                    localStorage.removeItem("clinicAuth");
+                    setAuth(null);
+                    setMenuOpen(false);
+                    navigate("/");
+                  }}
+                >
+                  Logout
+                </button>
+              )}
+            </>
           )}
         </nav>
       </div>

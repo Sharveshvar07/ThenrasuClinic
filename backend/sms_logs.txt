@@ -24,3 +24,43 @@ Date: 2026-07-17
 Time: 08:00 AM - 10:00 AM
 Status: Confirmed. Thank you!
 ========================================
+
+========================================
+[11/7/2026, 9:22:59 pm] SMS SENT
+TO: +919092663216
+MESSAGE:
+New booking at Dr. Thennarasu Clinic!
+Patient: Sharveshvar TR (6, Male)
+Phone: 9842141123
+Specialty: Family Medicine
+Doctor: Dr. Kavi Priya
+Date: 2026-07-29
+Time: 10:30 AM - 12:30 PM
+Reason: fever
+========================================
+
+========================================
+[11/7/2026, 9:27:49 pm] SMS SENT
+TO: +919842141123
+MESSAGE:
+Dear Sharveshvar TR, your appointment request at Dr. Thennarasu Clinic has been CONFIRMED.
+Specialty: Family Medicine
+Doctor: Dr. Kavi Priya
+Date: 2026-07-29
+Time: 10:30 AM - 12:30 PM
+Status: Confirmed. Thank you!
+========================================
+
+========================================
+[13/7/2026, 6:37:31 pm] SMS SENT
+TO: +919092663216
+MESSAGE:
+New booking at Dr. Thennarasu Clinic!
+Patient: Sharveshvar TR (6, Male)
+Phone: 9842141123
+Specialty: Family Medicine
+Doctor: Dr. Kavi Priya
+Date: 2026-07-15
+Time: 09:00 AM - 10:30 AM
+Reason: fever
+========================================

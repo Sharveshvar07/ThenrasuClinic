@@ -61,14 +61,27 @@ export default function Home() {
             Experience a clinic where you immediately feel safe and understood.
           </p>
 
-          <div className="hero-buttons">
-            <Link to="/book" className="btn-primary">
-              Book an Appointment
-            </Link>
+          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", width: "fit-content" }}>
+            <div className="hero-buttons" style={{ width: "100%", justifyContent: "center" }}>
+              <Link to="/book" className="btn-primary">
+                Book an Appointment
+              </Link>
 
-            <Link to="/services" className="btn-outline">
-              Our Services
-            </Link>
+              <Link to="/services" className="btn-outline">
+                Our Services
+              </Link>
+            </div>
+
+            <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 24, lineHeight: 1, filter: "drop-shadow(0 2px 8px rgba(239, 68, 68, 0.4))" }}>🚨</span>
+              <a href="tel:+918300288588" style={{
+                color: "#fff", textDecoration: "none", fontSize: 17, fontWeight: 700,
+                letterSpacing: "0.03em", fontFamily: "'Outfit', sans-serif",
+                textShadow: "0 2px 4px rgba(0,0,0,0.3)"
+              }}>
+                24/7 Emergency: <span style={{ color: "#f87171", textDecoration: "underline" }}>+91 8300288588 / +91 8300288788</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -90,9 +103,7 @@ export default function Home() {
                 name: 'Dr. Kavipriya',
                 title: 'Consultant - General Medicine',
                 qualification: 'MBBS,DNB (Family medicine)',
-                regNo: '172183',
-                mobile: '+91 90926 63216',
-                email: 'a.rthennarasu05@gmail.com'
+                regNo: '172183'
               },
               {
                 id: 2,
@@ -101,9 +112,7 @@ export default function Home() {
                 title: 'Consultant - Dental',
                 degree: 'MDS., (OMFS)',
                 fellowship: 'Fellowship in cleft and Craniofacial Surgery',
-                regNo: '29716',
-                mobile: '+91 90926 63216',
-                email: 'a.rthennarasu05@gmail.com'
+                regNo: '29716'
               },
             ].map((doc, idx) => (
               <div
@@ -134,13 +143,7 @@ export default function Home() {
                   )}
                   <div style={{ marginTop: 12, color: '#475569', fontSize: 14 }}>
                     {doc.regNo && (
-                      <p style={{ margin: '0 0 6px' }}><strong>Reg No:</strong> {doc.regNo}</p>
-                    )}
-                    {doc.mobile && (
-                      <p style={{ margin: '0 0 6px' }}><strong>Phone:</strong> {doc.mobile}</p>
-                    )}
-                    {doc.email && (
-                      <p style={{ margin: 0 }}><strong>Email:</strong> {doc.email}</p>
+                      <p style={{ margin: '0' }}><strong>Reg No:</strong> {doc.regNo}</p>
                     )}
                   </div>
                 </div>

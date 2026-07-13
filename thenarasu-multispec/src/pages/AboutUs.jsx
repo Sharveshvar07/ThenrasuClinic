@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import ClinicBg from "../Images/clinic.jpeg";
 
@@ -35,7 +35,7 @@ const doctors = [
     title: "Consultant – General Medicine",
     qualification: "MBBS, DNB (Family Medicine)",
     regNo: "172183",
-    experience: "10+ years",
+    experience: "5+ years",
     bio: "Dr. Kavipriya brings a compassionate, holistic approach to primary care. Her expertise ensures personalised care for patients of all ages.",
     specialities: ["General Medicine", "Family Health", "Preventive Care", "Internal Medicine", "Chronic Disease Management"],
   },
@@ -46,7 +46,7 @@ const doctors = [
     title: "Consultant – Dental",
     qualification: "MDS (OMFS), Fellowship in Cleft & Craniofacial Surgery",
     regNo: "29716",
-    experience: "15+ years",
+    experience: "5+ years",
     bio: "Dr. Thennarasu is a highly skilled oral and maxillofacial surgeon with extensive experience in complex reconstructive and cleft surgeries.",
     specialities: ["Oral & Maxillofacial Surgery", "Cleft Surgery", "Craniofacial Surgery", "Dental Implants", "Jaw Reconstruction"],
   },
@@ -59,7 +59,7 @@ export default function AboutUs() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const autoRef = useRef(null);
+
 
   const missionRef = useRef(null);
   const valuesRef = useRef(null);
@@ -69,18 +69,13 @@ export default function AboutUs() {
   const [doctorsVisible, setDoctorsVisible] = useState(false);
 
   // ── Auto-advance carousel ──────────────────────────────────────────────
-  const advance = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % TOTAL_SLIDES);
-  }, []);
-
   useEffect(() => {
-    if (isHovered) {
-      clearInterval(autoRef.current);
-      return;
-    }
-    autoRef.current = setInterval(advance, AUTO_INTERVAL);
-    return () => clearInterval(autoRef.current);
-  }, [isHovered, advance]);
+    if (isHovered) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % TOTAL_SLIDES);
+    }, AUTO_INTERVAL);
+    return () => clearInterval(interval);
+  }, [isHovered, currentSlide]);
 
   useEffect(() => {
     document.title = "About Us | Dr. Thennarasu Clinic";
@@ -429,7 +424,7 @@ export default function AboutUs() {
             marginTop: 32
           }}>
             <button
-              onClick={() => { setCurrentSlide((prev) => (prev === 0 ? TOTAL_SLIDES - 1 : prev - 1)); clearInterval(autoRef.current); }}
+              onClick={() => setCurrentSlide((prev) => (prev === 0 ? TOTAL_SLIDES - 1 : prev - 1))}
               style={{
                 width: 44,
                 height: 44,
@@ -462,7 +457,7 @@ export default function AboutUs() {
               {Array.from({ length: TOTAL_SLIDES }).map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => { setCurrentSlide(idx); clearInterval(autoRef.current); }}
+                  onClick={() => setCurrentSlide(idx)}
                   style={{
                     position: "relative",
                     width: currentSlide === idx ? 32 : 10,
@@ -495,7 +490,7 @@ export default function AboutUs() {
             </div>
 
             <button
-              onClick={() => { setCurrentSlide((prev) => (prev === TOTAL_SLIDES - 1 ? 0 : prev + 1)); clearInterval(autoRef.current); }}
+              onClick={() => setCurrentSlide((prev) => (prev === TOTAL_SLIDES - 1 ? 0 : prev + 1))}
               style={{
                 width: 44,
                 height: 44,

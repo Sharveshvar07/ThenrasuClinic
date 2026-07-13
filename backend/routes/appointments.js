@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { getCollection } from "../mongodb.js";
-import { sendSMS } from "../sms.js";
+import { sendSMS, sendWhatsApp } from "../sms.js";
 
 const router = Router();
 
@@ -183,7 +183,7 @@ router.post("/", async (req, res) => {
     const full = await getCollection("appointments").findOne({ _id: row.insertedId });
 
     // Send SMS to admin with appointment details
-    const adminPhone = process.env.ADMIN_PHONE || "9092663216";
+    const adminPhone = process.env.ADMIN_PHONE || "8300288588";
     const adminMessage = `New booking at Dr. Thennarasu Clinic!
 Patient: ${patientName.trim()} (${patientAge}, ${patientGender || 'N/A'})
 Phone: ${patientPhone}
@@ -194,6 +194,10 @@ Time: ${appointmentTime}
 Reason: ${reason?.trim() || 'None'}`;
     
     sendSMS(adminPhone, adminMessage).catch(err => console.error("Error sending booking SMS to admin:", err));
+
+    // Send WhatsApp to admin with appointment details
+    const adminWhatsAppNumber = process.env.ADMIN_WHATSAPP || "9092663216";
+    sendWhatsApp(adminWhatsAppNumber, adminMessage).catch(err => console.error("Error sending booking WhatsApp to admin:", err));
 
     res.status(201).json(fmt(full));
   } catch (err) {
@@ -248,16 +252,18 @@ router.patch("/:id", async (req, res) => {
     // Send status update SMS to patient
     if (status === "confirmed" || status === "cancelled") {
       const patientPhone = updated.patientPhone;
+      const createdTime = updated.createdAt ? new Date(updated.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }) : "";
+      
       let patientMessage = "";
       if (status === "confirmed") {
-        patientMessage = `Dear ${updated.patientName}, your appointment request at Dr. Thennarasu Clinic has been CONFIRMED.
+        patientMessage = `Dear ${updated.patientName}, your appointment request booked on ${createdTime} at Dr. Thennarasu Clinic has been CONFIRMED.
 Specialty: ${specialtyName}
 Doctor: ${updated.doctorName || "Doctor"}
 Date: ${updated.appointmentDate}
 Time: ${updated.appointmentTime}
 Status: Confirmed. Thank you!`;
       } else if (status === "cancelled") {
-        patientMessage = `Dear ${updated.patientName}, your appointment request at Dr. Thennarasu Clinic has been CANCELLED.
+        patientMessage = `Dear ${updated.patientName}, your appointment request booked on ${createdTime} at Dr. Thennarasu Clinic has been CANCELLED.
 Specialty: ${specialtyName}
 Doctor: ${updated.doctorName || "Doctor"}
 Date: ${updated.appointmentDate}
@@ -266,6 +272,7 @@ Status: Cancelled.`;
       }
 
       sendSMS(patientPhone, patientMessage).catch(err => console.error("Error sending status update SMS to patient:", err));
+      sendWhatsApp(patientPhone, patientMessage).catch(err => console.error("Error sending status update WhatsApp to patient:", err));
     }
 
     res.json(fmt({ ...updated, specialtyName: specialtyName }));

@@ -197,10 +197,10 @@ export default function Book() {
       <div className="confirmation">
         <div className="confirmation-card">
           <div className="check-icon">&#10003;</div>
-          <h2>Booking Confirmed!</h2>
-          <p>Thank you for choosing our Clinic. We have received your appointment request.</p>
+          <h2>Thank you for booking</h2>
+          <p>Thank you for choosing our Clinic. We have received your appointment request. We will call and inform you soon.</p>
           <div className="confirmation-buttons">
-            <a href="tel:+919092663216" className="btn-outline" style={{ textDecoration: "none", textAlign: "center" }}>📞 Call Us</a>
+            <a href="tel:+918300288588" className="btn-outline" style={{ textDecoration: "none", textAlign: "center" }}>📞 Call Us</a>
             <a href="https://wa.me/919092663216?text=Hi%2C%20I%20just%20booked%20an%20appointment%20at%20Dr.%20Thennarasu%20Clinic.%20Please%20confirm." target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ textDecoration: "none", textAlign: "center" }}>💬 WhatsApp Chat</a>
           </div>
         </div>
