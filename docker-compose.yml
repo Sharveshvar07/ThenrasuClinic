@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB=clinic_db
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./thenarasu-multispec
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
